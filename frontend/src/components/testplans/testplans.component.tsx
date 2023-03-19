@@ -17,6 +17,7 @@ import DeletionDialogTestPlans from "./deletion.dialog.testplans.component";
 import {defaultStatus, statuses} from "../model.statuses";
 import ProfileService from "../../services/profile.service";
 import {useTranslation} from "react-i18next";
+import {useParams} from "react-router-dom";
 
 export interface treeTestPlan {
     id: number,
@@ -26,7 +27,7 @@ export interface treeTestPlan {
     title: string;
 }
 
-const bfs = (startTrees: treeTestPlan[], testPlanId: number) => {
+const searchForSubtreeOfTestPlansUsingBFS = (startTrees: treeTestPlan[], testPlanId: number) => {
     let q: treeTestPlan[] = new Array<treeTestPlan>();
 
     for (let tree of startTrees) {
@@ -50,6 +51,7 @@ const bfs = (startTrees: treeTestPlan[], testPlanId: number) => {
 const TestplansComponent: React.FC = () => {
     const {t} = useTranslation();
     const classes = useStyles()
+    const params = useParams()
     const [showCreationTestPlan, setShowCreationTestPlan] = useState(false)
     const [isForEdit, setIsForEdit] = useState<testPlan | null>(null)
     const [testPlans, setTestPlans] = useState<testPlan []>([])
@@ -57,12 +59,12 @@ const TestplansComponent: React.FC = () => {
     const [currentTestPlan, setCurrentTestPlan] = useState<testPlan | undefined>()
     const [detailedTestInfo, setDetailedTestInfo] = useState<{ show: boolean, test: test } | null>(null)
     const [showEnterResult, setShowEnterResult] = useState(false)
-    const testPlanId = window.location.pathname === "/testplans" ? null : Number(window.location.pathname.slice("/testplans/".length))
     const [breadcrumbs, setBreadcrumbs] = useState<{ name: string, link: string | number }[]>()
     const [flag, setFlag] = useState(true)
     const [openDialogDeletionTestPlans, setOpenDialogDeletionTestPlans] = useState(false);
     const [selected, setSelected] = React.useState<number []>([]);
     const [tests, setTests] = useState<test[]>([])
+    const testPlanId = Number(params.testplanId)
 
     const handleShowCreationTestPlan = () => setShowCreationTestPlan(true)
 
@@ -77,8 +79,8 @@ const TestplansComponent: React.FC = () => {
                 TestPlanService.getTestPlan(testPlanId).then((response) => {
                     let curTestPlan: testPlan = response.data
                     curTestPlan.tests.forEach(x => {
-                        if (x.current_result) {
-                            let status = statuses.find(i => i.name === x.current_result)
+                        if (x.last_status) {
+                            let status = statuses.find(i => i.name === x.last_status)
                             x.last_status_color = status ? status : defaultStatus
                         } else {
                             x.last_status_color = defaultStatus
@@ -98,7 +100,7 @@ const TestplansComponent: React.FC = () => {
             TestPlanService.getTreeTestPlans().then((response) => {
                 const localTreeTestPlans = response.data;
                 if (testPlanId) {
-                    const testTreeTestPlan = bfs(localTreeTestPlans, testPlanId);
+                    const testTreeTestPlan = searchForSubtreeOfTestPlansUsingBFS(localTreeTestPlans, testPlanId);
                     if (testTreeTestPlan === undefined) {
                         setTreeTestPlans([]);
                     } else {
@@ -160,7 +162,7 @@ const TestplansComponent: React.FC = () => {
                     <TableContainer className={classes.tableContainer}>
                         <Table size="small" className={classes.mainTable}>
                             <tbody className={classes.mainBody}>
-                            <tr>
+                            {selected.length > 0 && <tr>
                                 <td>
                                     <Button sx={{color: "#000000"}} disabled={!(selected.length > 0)}
                                             onClick={() => {
@@ -169,7 +171,7 @@ const TestplansComponent: React.FC = () => {
                                         {t("testplans.delete")}
                                     </Button>
                                 </td>
-                            </tr>
+                            </tr>}
                             <tr>
                                 <td>
                                     <Breadcrumbs data-cy="breadcrumbs" aria-label="breadcrumb">

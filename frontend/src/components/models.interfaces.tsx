@@ -15,6 +15,7 @@ export interface attachment {
     object_id: number;
     user: number;
     file: string;
+    link: string;
     url: string;
 }
 
@@ -51,10 +52,12 @@ export interface myCase {
 
 export interface test {
     id: number;
-    case: myCase;
+    case: number;
+    name: string;
     plan: number;
     project: number;
     test_results: testResult[];
+    current_result: string;
     last_status: string;
     last_status_color: { id: number, name: string, color: string };
     user?: number;
@@ -75,8 +78,9 @@ export interface testPlan {
     id: number,
     name: string,
     project: number,
-    parent: number | null,
-    parameters: number[] | null,
+    parent?: number,
+    description: string,
+    parameters?: number[],
     tests: test[],
     started_at: string,
     due_date: string,

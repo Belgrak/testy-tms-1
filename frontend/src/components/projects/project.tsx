@@ -30,6 +30,7 @@ import {useNavigate} from "react-router-dom";
 import {useSelector} from "react-redux";
 import {RootState} from "../../app/store";
 import {useTranslation} from "react-i18next";
+import localStorageTMS from "../../services/localStorageTMS";
 
 const Project: React.FC = () => {
     const {t} = useTranslation();
@@ -68,7 +69,7 @@ const Project: React.FC = () => {
         setStatusesToShow({...statusesShow, [status]: !statusesShow[status]})
     };
 
-    const projectValue = useSelector((state: RootState) => state.currentProject.value)
+    const projectValue = localStorageTMS.getCurrentProject()
     if (!projectValue) {
         console.log("Redux state currentProject is empty")
     }

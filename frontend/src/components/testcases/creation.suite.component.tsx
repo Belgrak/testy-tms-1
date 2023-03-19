@@ -13,6 +13,7 @@ import SuiteCaseService from "../../services/suite.case.service";
 import {CustomWidthTooltip, mainFieldInSuite, treeSuite} from "./suites.component";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import {useTranslation} from "react-i18next";
+import localStorageTMS from "../../services/localStorageTMS";
 
 
 interface Props {
@@ -86,7 +87,7 @@ const CreationSuite: React.FC<Props> = ({
     }
 
     const createSuite = () => {
-        const projectId = JSON.parse(localStorage.getItem("currentProject") ?? '{"id" : null}').id
+        const projectId = localStorageTMS.getCurrentProject().id
         if (namePresence && projectId) {
             const suite = {
                 name: name,

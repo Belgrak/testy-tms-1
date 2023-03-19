@@ -33,6 +33,9 @@ const DeletionDialogTestPlans: React.FC<Props> = ({
                 setTreeTestplans(response.data)
             })
         })
+            .catch((e) => {
+                console.log(e);
+            });
         setSelectedForDeletion([])
         setOpenDialogDeletion(false)
     }

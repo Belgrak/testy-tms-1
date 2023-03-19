@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from "react";
+// import MDEditor from '@uiw/react-md-editor';
 import {attachment, test, user} from "../models.interfaces";
 import Chip from "@mui/material/Chip";
 import FormControl from "@mui/material/FormControl";
@@ -20,6 +21,9 @@ import Attachments from "../attachment/attachments";
 import AttachmentButton from "../attachment/attachment_button";
 import AttachmentService from "../../services/attachment.servise";
 import {useTranslation} from "react-i18next";
+import MDEditor from "@uiw/react-md-editor";
+import {Editor} from "@toast-ui/react-editor";
+import SuiteCaseService from "../../services/suite.case.service";
 
 interface Props {
     detailedTestInfo: { show: boolean, test: test };
@@ -36,18 +40,19 @@ const DetailedTestInfo: React.FC<Props> = ({
                                            }) => {
     const {t} = useTranslation();
     const classes = useStyles()
+    const [scenario, setScenario] = useState<string>()
+    const [description, setDescription] = useState<string>()
+    const [estimate, setEstimate] = useState<number>()
+    const [setup, setSetup] = useState<string>()
+    const [teardown, setTeardown] = useState<string>()
     const [selectedStatus, setSelectedStatus] = useState<{ id: number, name: string } | null>(null)
     const [attachments, setAttachments] = React.useState<Map<number, attachment[]>>(new Map())
     const [filesSelected, setFilesSelected] = React.useState<File[]>()
-    const [comment, setComment] = useState("")
+    const [value, setValue] = useState("")
     const [num, setNum] = useState<number>()
     const [names, setNames] = useState<Map<number, string>>(new Map())
     const test = detailedTestInfo.test
-
-    const onChangeComment = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        let str = e.target.value.trimStart()
-        setComment(str)
-    }
+    const editorRef = React.createRef();
 
     const onChangeExecutionTime = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         let num = Number(e.target.value)
@@ -77,8 +82,20 @@ const DetailedTestInfo: React.FC<Props> = ({
         }).then(([namesMap, attachmentsMap]) => {
             setNames(namesMap)
             setAttachments(attachmentsMap)
+        }).catch((e) => {
+            console.log(e)
         })
     }, [detailedTestInfo, test.test_results])
+
+    useEffect(() => {
+        SuiteCaseService.getCaseById(test.case).then(response => {
+            setScenario(response.data.scenario)
+            setDescription(response.data.description)
+            setEstimate(response.data.estimate)
+            setSetup(response.data.setup)
+            setTeardown(response.data.teardown)
+        })
+    }, [test.case])
 
     const handleShowEnterResult = () => setShowEnterResult(true)
     const chooseStatus = (e: any) => {
@@ -87,7 +104,7 @@ const DetailedTestInfo: React.FC<Props> = ({
 
     const handleClose = () => {
         setNum(0)
-        setComment("")
+        setValue("")
         setSelectedStatus(null)
         setShowEnterResult(false)
         setFilesSelected([])
@@ -95,9 +112,11 @@ const DetailedTestInfo: React.FC<Props> = ({
 
     const createTestResult = () => {
         let statusId = selectedStatus ? selectedStatus.id : test.last_status_color.id
+        // @ts-ignore
+        let comment = editorRef.current.editorInst.getMarkdown()
         const testResult = {
             status: statusId,
-            comment: comment,
+            comment: comment ?? null,
             execution_time: num ? num : null,
             test: test.id
         }
@@ -135,7 +154,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                     </Grid>
                     <Grid item>
                         <Typography variant="h5">
-                            {test.case.name}
+                            {test.name}
                         </Typography>
                     </Grid>
                 </Grid>
@@ -159,39 +178,48 @@ const DetailedTestInfo: React.FC<Props> = ({
                     {test.username ?? t("test_info.not_assigned")}
                 </Grid>
             </Grid>
-            {test.case.estimate &&
-            (<Grid container spacing={2}>
-                <Grid item sx={{fontWeight: 'bold'}}>
-                    {t("test_info.estimate")}
-                </Grid>
-                <Grid item>
-                    {test.case.estimate}
-                </Grid>
-            </Grid>)}
-            {test.case.setup &&
+            {description &&
+            (<div>
+                <div className={classes.divBold}>
+                    Описание:
+                </div>
+                <div>
+                    <MDEditor.Markdown source={description} style={{whiteSpace: 'pre-wrap'}}/>
+                </div>
+            </div>)}
+            {setup &&
             (<div>
                 <div className={classes.divBold}>
                     {t("test_info.setup")}
                 </div>
                 <div>
-                    {test.case.setup}
+                    <MDEditor.Markdown source={setup} style={{whiteSpace: 'pre-wrap'}}/>
                 </div>
             </div>)}
-            {test.case.teardown &&
+            {teardown &&
             (<div>
                 <div className={classes.divBold}>
                     {t("test_info.teardown")}
                 </div>
                 <div>
-                    {test.case.teardown}
+                    <MDEditor.Markdown source={teardown} style={{whiteSpace: 'pre-wrap'}}/>
                 </div>
             </div>)}
+            {estimate &&
+            (<Grid container spacing={2}>
+                <Grid item sx={{fontWeight: 'bold'}}>
+                    {t("test_info.estimate")}
+                </Grid>
+                <Grid item>
+                    <MDEditor.Markdown source={estimate.toString()} style={{whiteSpace: 'pre-wrap'}}/>
+                </Grid>
+            </Grid>)}
 
             <div className={classes.divBold}>
                 {t("test_info.description")}
             </div>
             <div className={classes.divTestInfoScenario}>
-                {test.case.scenario}
+                <MDEditor.Markdown source={scenario} style={{whiteSpace: 'pre-wrap'}}/>
             </div>
 
             <Grid container spacing={1}>
@@ -204,6 +232,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                             <Select
                                 value={selectedStatus ? selectedStatus.name : test.last_status_color.name}
                                 onChange={(e) => chooseStatus(e)}
+                                autoFocus={true}
                                 renderValue={(selected) => <Grid>{selected}</Grid>}>
                                 {statuses.map((status, index) => <MenuItem key={index}
                                                                            value={status as any}>{status.name}</MenuItem>)}
@@ -227,20 +256,41 @@ const DetailedTestInfo: React.FC<Props> = ({
                     <div className={classes.divBold}>
                         {t("test_info.comments")}
                     </div>
-                    <TextField
-                        id="enterResultTextField"
-                        className={classes.textFieldTestplansAndTests}
-                        onChange={(content) => onChangeComment(content)}
-                        variant="outlined"
-                        value={comment}
-                        margin="normal"
-                        autoComplete="off"
-                        fullWidth
-                        multiline
-                        minRows={2}
-                        maxRows={3}
-                        label={t("test_info.input_comments")}
-                    />
+                    {/*<TextField*/}
+                    {/*    id="enterResultTextField"*/}
+                    {/*    className={classes.textFieldTestplansAndTests}*/}
+                    {/*    onChange={(content) => onChangeComment(content)}*/}
+                    {/*    variant="outlined"*/}
+                    {/*    value={comment}*/}
+                    {/*    margin="normal"*/}
+                    {/*    autoComplete="off"*/}
+                    {/*    fullWidth*/}
+                    {/*    multiline*/}
+                    {/*    minRows={2}*/}
+                    {/*    maxRows={3}*/}
+                    {/*    label="Введите комментарии к результату теста"*/}
+                    {/*/>*/}
+                    {/*<div className="container" style={{marginTop: "2px", marginBottom: "10px"}}>*/}
+                    {/*    <MDEditor*/}
+                    {/*        value={value}*/}
+                    {/*        onChange={(str) => setValue(str ? str : "")}*/}
+                    {/*    />*/}
+                    {/*</div>*/}
+                    <div className="container" style={{marginTop: "2px", marginBottom: "10px"}}>
+                        <Editor
+                            ref={editorRef}
+                            initialValue={value}
+                            height="200px"
+                            autoFocus={false}
+                            useCommandShortcut={true}
+                            usageStatistics={false}
+                            hideModeSwitch={true}
+                            extendedAutolinks={true}
+                            toolbarItems={[
+                                ['heading', 'bold', 'italic', 'quote', 'code', 'codeblock', 'link', 'ul', 'ol', 'task']
+                            ]}
+                        />
+                    </div>
                     <Grid container spacing={1}>
                         <Grid item sx={{fontWeight: 'bold'}}>
                             {t("test_info.execution_time")}
@@ -250,6 +300,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                                 type="number"
                                 id="executionTimeTextField"
                                 size="small"
+                                InputProps={{inputProps: {min: 0}}}
                                 onChange={(content) => onChangeExecutionTime(content)}
                                 value={num}
                                 autoComplete="off"
@@ -298,34 +349,34 @@ const DetailedTestInfo: React.FC<Props> = ({
                 </div>
                 <table>
                     <tbody>
-                        {test.test_results.slice(0).map((testResult, index) =>
-                            <tr key={index}>
-                                <TableCell sx={{maxWidth: "max-content", paddingTop: 0}}>
-                                    <div>
-                                        <Grid item>
-                                            <Chip label={testResult.status_color.name}
-                                                  sx={{
-                                                      margin: "3px",
-                                                      maxWidth: "95%",
-                                                      backgroundColor: testResult.status_color.color,
-                                                      color: "white"
-                                                  }}/>
-                                        </Grid>
-                                        <Grid item>
-                                            {moment(testResult.updated_at, 'YYYY-MM-DDTHH:mm').format('DD/MM/YY HH:mm')}
-                                        </Grid>
-                                        <Grid item sx={{fontWeight: 'bold', wordBreak: "break-word"}}>
-                                            {names.get(testResult.id) ?? ""}
-                                        </Grid>
+                    {test.test_results.map((testResult, index) =>
+                        <tr key={index}>
+                            <TableCell sx={{maxWidth: "max-content", paddingTop: 0}}>
+                                <div>
+                                    <Grid item>
+                                        <Chip label={testResult.status_color.name}
+                                              sx={{
+                                                  margin: "3px",
+                                                  maxWidth: "95%",
+                                                  backgroundColor: testResult.status_color.color,
+                                                  color: "white"
+                                              }}/>
+                                    </Grid>
+                                    <Grid item>
+                                        {moment(testResult.updated_at, 'YYYY-MM-DDTHH:mm').format('DD/MM/YY HH:mm')}
+                                    </Grid>
+                                    <Grid item sx={{fontWeight: 'bold', wordBreak: "break-word"}}>
+                                        {names.get(testResult.id) ?? ""}
+                                    </Grid>
 
-                                    </div>
-                                </TableCell>
+                                </div>
+                            </TableCell>
 
                             <TableCell align="left" sx={{verticalAlign: 'top', paddingTop: "9px"}}>
                                 <div className={classes.divBold}>
                                     {t("test_info.comments")}
                                 </div>
-                                {testResult?.comment}
+                                <MDEditor.Markdown source={testResult?.comment} style={{whiteSpace: 'pre-wrap'}}/>
                                 <Attachments attachments={attachments.get(testResult.id)}/>
                             </TableCell>
                         </tr>

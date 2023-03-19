@@ -19,6 +19,7 @@ import FormControl from "@mui/material/FormControl";
 import useStylesGlobal from "../../styles/styles";
 import {myCase} from "../models.interfaces";
 import {useTranslation} from "react-i18next";
+import localStorageTMS from "../../services/localStorageTMS";
 
 
 export const CustomWidthTooltip = styled(({className, ...props}: TooltipProps) => (
@@ -89,7 +90,7 @@ const SuitesComponent = () => {
     const memoizedValueFolderStructureOfSuites = useMemo(() =>
             <FolderSuites selectedSuiteForTreeView={selectedSuiteForTreeView}/>,
         [treeSuites, selectedSuiteForTreeView]);
-    const [countOfSuitesOnPage, setCountOfSuitesOnPage] = useState(parseInt(localStorage.getItem("countOfSuitesOnPage") ?? "20"));
+    const [countOfSuitesOnPage, setCountOfSuitesOnPage] = useState(parseInt(localStorageTMS.getElementByKey("countOfSuitesOnPage") ?? "20"));
     const start = 10
     const stop = 100
     const step = 5
@@ -144,7 +145,7 @@ const SuitesComponent = () => {
 
     function onChangeSuitesOnPage(e: any) {
         setCountOfSuitesOnPage(e.target.value)
-        localStorage.setItem("countOfSuitesOnPage", e.target.value)
+        localStorageTMS.setElementByKey("countOfSuitesOnPage", e.target.value)
     }
 
 
