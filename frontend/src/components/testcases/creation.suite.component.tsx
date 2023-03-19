@@ -12,6 +12,7 @@ import Typography from "@mui/material/Typography";
 import SuiteCaseService from "../../services/suite.case.service";
 import {CustomWidthTooltip, mainFieldInSuite, treeSuite} from "./suites.component";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import {useTranslation} from "react-i18next";
 
 
 interface Props {
@@ -37,6 +38,7 @@ const CreationSuite: React.FC<Props> = ({
                                             setInfoSuiteForEdit,
                                             treeSuites
                                         }) => {
+    const {t} = useTranslation();
     const classes = useStyles()
     const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string } | null>(selectedSuiteCome)
     const [name, setName] = useState("")
@@ -183,14 +185,13 @@ const CreationSuite: React.FC<Props> = ({
                     <Grid xs={9} item style={{padding: 20}}>
                         <Grid>
                             <Typography variant="h6">
-                                Название сьюты
+                                {t("suites.suite_title")}
                             </Typography>
 
                             <CustomWidthTooltip
                                 title={<Grid data-cy="fill-field-note"
                                              style={{display: "flex", flexDirection: 'row'}}><WarningAmberIcon
-                                    sx={{fontSize: 25, marginRight: 1}}/> <Typography> Заполните это
-                                    поле.</Typography></Grid>} placement="top-start" arrow
+                                    sx={{fontSize: 25, marginRight: 1}}/> <Typography>{t("case_create.fill_field")}</Typography></Grid>} placement="top-start" arrow
                                 open={fillFieldName}>
                                 <TextField
                                     id="nameTextField"
@@ -202,13 +203,13 @@ const CreationSuite: React.FC<Props> = ({
                                     fullWidth
                                     autoComplete="off"
                                     value={name}
-                                    label="Введите название сьюты"
+                                    label={t("suites.input_title")}
                                 />
                             </CustomWidthTooltip>
                         </Grid>
                         <Grid className={classes.gridContent}>
                             <Typography variant="h6">
-                                Описание
+                                {t("suites.about_suite")}
                             </Typography>
 
                             <TextField
@@ -219,7 +220,7 @@ const CreationSuite: React.FC<Props> = ({
                                 value={description}
                                 margin="normal"
                                 fullWidth
-                                label="Введите описание тест-кейса"
+                                label={t("suites.input_about")}
                                 autoComplete="off"
                                 multiline
                                 minRows={2}
@@ -233,22 +234,22 @@ const CreationSuite: React.FC<Props> = ({
                     }}>
                         <Grid style={{marginLeft: 15}}>
                             <Typography style={{marginBottom: 10}}>
-                                Родительская сьюта
+                                {t("suites.parent_suite")}
                             </Typography>
 
                             <FormControl style={{minWidth: "90%"}} className={classes.textFieldSelectCreationCaseSuite}>
-                                <InputLabel id="select-suite">Выберите сьюту</InputLabel>
+                                <InputLabel id="select-suite">{t("suites.input_suite")}</InputLabel>
                                 <Select
                                     data-cy="select-parent-suite"
                                     labelId="select-suite"
-                                    value={selectedSuite ? selectedSuite.name : "Не выбрано"}
-                                    label="Выберите сьюту"
+                                    value={selectedSuite ? selectedSuite.name : t("suites.default")}
+                                    label={t("suites.input_suite")}
                                     onChange={(e) => chooseSuite(e)}
                                     renderValue={(selected) => <Grid>{selected}</Grid>}
                                     MenuProps={MenuProps}
                                 >
                                     {!selectedSuiteForTreeView && <MenuItem value={null as any}>
-                                        <em>Не выбрано</em>
+                                        <em>{t("suites.default")}</em>
                                     </MenuItem>}
                                     {suitesForSelect.map((suite, index) => <MenuItem key={index}
                                                                                      value={suite as any}>{suite.name}</MenuItem>)}
@@ -268,7 +269,7 @@ const CreationSuite: React.FC<Props> = ({
                                     color: "#000000",
                                 }}
                                 >
-                                    Отменить
+                                    {t("suites.cancel")}
                                 </Button>
                                 <Button
                                     data-cy="agree-to-save-suite"
@@ -282,7 +283,7 @@ const CreationSuite: React.FC<Props> = ({
                                         color: "#FFFFFF",
                                     }}
                                 >
-                                    Сохранить
+                                    {t("suites.submit")}
                                 </Button>
                             </Grid>
                         </Grid>

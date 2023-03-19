@@ -6,6 +6,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import {project} from "../models.interfaces";
 import ProjectService from "../../services/project.service";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     openDialogDeletion: boolean;
@@ -20,7 +21,7 @@ const DeletionDialogProject: React.FC<Props> = ({
                                                     selectedForDeletion,
                                                     setProjects
                                                 }) => {
-
+    const {t} = useTranslation();
     const disagreeToDelete = () => setOpenDialogDeletion(false)
 
     const agreeToDelete = () => {
@@ -41,7 +42,7 @@ const DeletionDialogProject: React.FC<Props> = ({
         >
             <DialogContent>
                 <DialogContentText sx={{fontSize: 20, color: "black"}}>
-                    Вы уверены, что хотите удалить проект
+                    {t("project_delete.warning")}
                     {selectedForDeletion ?
                     <em> {selectedForDeletion.name}</em> : ""}?
                     <br/>
@@ -59,7 +60,7 @@ const DeletionDialogProject: React.FC<Props> = ({
                         }}
                         onClick={disagreeToDelete}
                         title={"Нет"}>
-                        Нет
+                        {t("project_delete.no")}
                     </Button>
                     <Button
                         style={{
@@ -72,7 +73,7 @@ const DeletionDialogProject: React.FC<Props> = ({
                         }}
                         onClick={agreeToDelete}
                         title={"Да"}>
-                        Да
+                        {t("project_delete.yes")}
                     </Button>
                 </DialogActions>
             </DialogContent>

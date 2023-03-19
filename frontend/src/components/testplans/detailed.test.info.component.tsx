@@ -19,6 +19,7 @@ import ProfileService from "../../services/profile.service";
 import Attachments from "../attachment/attachments";
 import AttachmentButton from "../attachment/attachment_button";
 import AttachmentService from "../../services/attachment.servise";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     detailedTestInfo: { show: boolean, test: test };
@@ -33,6 +34,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                                                showEnterResult,
                                                setShowEnterResult
                                            }) => {
+    const {t} = useTranslation();
     const classes = useStyles()
     const [selectedStatus, setSelectedStatus] = useState<{ id: number, name: string } | null>(null)
     const [attachments, setAttachments] = React.useState<Map<number, attachment[]>>(new Map())
@@ -143,7 +145,7 @@ const DetailedTestInfo: React.FC<Props> = ({
             </div>
             <Grid container spacing={1}>
                 <Grid item sx={{fontWeight: 'bold'}}>
-                    Дата создания:
+                    {t("test_info.created_at")}
                 </Grid>
                 <Grid item>
                     {moment(test.created_at, 'YYYY-MM-DDTHH:mm').format('DD/MM/YYYY HH:mm')}
@@ -151,16 +153,16 @@ const DetailedTestInfo: React.FC<Props> = ({
             </Grid>
             <Grid container spacing={1}>
                 <Grid item sx={{fontWeight: 'bold'}}>
-                    Назначенный пользователь:
+                    {t("test_info.editor")}
                 </Grid>
                 <Grid item>
-                    {test.username ?? "не назначен"}
+                    {test.username ?? t("test_info.not_assigned")}
                 </Grid>
             </Grid>
             {test.case.estimate &&
             (<Grid container spacing={2}>
                 <Grid item sx={{fontWeight: 'bold'}}>
-                    Время выполнения:
+                    {t("test_info.estimate")}
                 </Grid>
                 <Grid item>
                     {test.case.estimate}
@@ -169,7 +171,7 @@ const DetailedTestInfo: React.FC<Props> = ({
             {test.case.setup &&
             (<div>
                 <div className={classes.divBold}>
-                    Подготовка теста:
+                    {t("test_info.setup")}
                 </div>
                 <div>
                     {test.case.setup}
@@ -178,7 +180,7 @@ const DetailedTestInfo: React.FC<Props> = ({
             {test.case.teardown &&
             (<div>
                 <div className={classes.divBold}>
-                    Очистка после теста:
+                    {t("test_info.teardown")}
                 </div>
                 <div>
                     {test.case.teardown}
@@ -186,7 +188,7 @@ const DetailedTestInfo: React.FC<Props> = ({
             </div>)}
 
             <div className={classes.divBold}>
-                Описание:
+                {t("test_info.description")}
             </div>
             <div className={classes.divTestInfoScenario}>
                 {test.case.scenario}
@@ -194,7 +196,7 @@ const DetailedTestInfo: React.FC<Props> = ({
 
             <Grid container spacing={1}>
                 <Grid item sx={{fontWeight: 'bold', paddingTop: 0}}>
-                    Результат:
+                    {t("test_info.result")}
                 </Grid>
                 {showEnterResult ?
                     <Grid item>
@@ -223,7 +225,7 @@ const DetailedTestInfo: React.FC<Props> = ({
             {showEnterResult && (
                 <div>
                     <div className={classes.divBold}>
-                        Комментарии:
+                        {t("test_info.comments")}
                     </div>
                     <TextField
                         id="enterResultTextField"
@@ -237,11 +239,11 @@ const DetailedTestInfo: React.FC<Props> = ({
                         multiline
                         minRows={2}
                         maxRows={3}
-                        label="Введите комментарии к результату теста"
+                        label={t("test_info.input_comments")}
                     />
                     <Grid container spacing={1}>
                         <Grid item sx={{fontWeight: 'bold'}}>
-                            Время выполнения:
+                            {t("test_info.execution_time")}
                         </Grid>
                         <Grid item>
                             <TextField
@@ -272,7 +274,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                         borderColor: "#000000",
                     }
                 }} onClick={showEnterResult ? createTestResult : handleShowEnterResult}>
-                    {showEnterResult ? "Сохранить" : "Внести результат"}
+                    {showEnterResult ? t("test_info.save") : t("test_info.load_results")}
                 </Button>
                 {showEnterResult && <Button variant="outlined" sx={{
                     borderColor: "#000000",
@@ -286,13 +288,13 @@ const DetailedTestInfo: React.FC<Props> = ({
                         borderColor: "#000000",
                     }
                 }} onClick={() => setShowEnterResult(false)}>
-                    Отмена
+                    {t("test_info.cancel")}
                 </Button>}
             </Grid>
             {test.test_results.length !== 0 &&
             (<div>
                 <div className={classes.divBold}>
-                    Предыдущие результаты:
+                    {t("test_info.previous_results")}
                 </div>
                 <table>
                     <tbody>
@@ -321,7 +323,7 @@ const DetailedTestInfo: React.FC<Props> = ({
 
                             <TableCell align="left" sx={{verticalAlign: 'top', paddingTop: "9px"}}>
                                 <div className={classes.divBold}>
-                                    Комментарии:
+                                    {t("test_info.comments")}
                                 </div>
                                 {testResult?.comment}
                                 <Attachments attachments={attachments.get(testResult.id)}/>

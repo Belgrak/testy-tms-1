@@ -12,6 +12,7 @@ import Checkbox from "@mui/material/Checkbox";
 import TableCell from "@mui/material/TableCell";
 import Link from "@mui/material/Link";
 import RowCase from "./row.case.table.suites.component";
+import {useTranslation} from "react-i18next";
 
 function Row(props: {
     row: treeSuite, setShowCreationCase: (show: boolean) => void, setShowCreationSuite: (show: boolean) => void,
@@ -23,6 +24,7 @@ function Row(props: {
     setComponentForDeletion: (component: myCase | treeSuite) => void,
     classesTableSuitesCases: any, setInfoSuiteForEdit: (suite: mainFieldInSuite) => void,
 }) {
+    const {t} = useTranslation();
     const {
         row,
         setShowCreationCase,
@@ -149,7 +151,7 @@ function Row(props: {
                                            scope="row"
                                            padding="none"
                                            className={classesTableSuitesCases.cellForCheckBoxAndId}>ID</TableCell>
-                                <TableCell colSpan={2}>Название</TableCell>
+                                <TableCell colSpan={2}>{t("cases.title")}</TableCell>
                             </tr>
                             </tbody>
                             <tbody className={classesTableSuitesCases.tableForCases}>
@@ -179,7 +181,7 @@ function Row(props: {
                                                   setShowCreationCase(true)
                                                   setSelectedSuiteCome({id: row.id, name: row.name, description: row.description})
                                               }}>
-                                            Добавить тест-кейс
+                                            {t("suites.add_case")}
                                         </Link>
                                         <Link underline="none">&nbsp;&nbsp;|&nbsp;&nbsp;</Link>
                                         <Link component="button"
@@ -188,7 +190,7 @@ function Row(props: {
                                                   setShowCreationSuite(true)
                                                   setSelectedSuiteCome({id: row.id, name: row.name, description: row.description})
                                               }}>
-                                            Добавить сьюту
+                                            {t("suites.add_suite")}
                                         </Link>
                                     </div>
                                 </td>

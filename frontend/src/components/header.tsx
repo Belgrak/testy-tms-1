@@ -14,12 +14,13 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import {NotificationsActive} from "@mui/icons-material";
 import AuthService from "../services/Authorization/auth.service";
 import {useNavigate} from "react-router-dom";
-
-const buttons = [['Тест-кейсы', "/testcases"], ['Тест-планы', "/testplans"]];
+import {useTranslation} from "react-i18next";
 
 const Header: React.FC = () => {
+    const {t} = useTranslation();
     const navigate = useNavigate()
 
+    const buttons = [[t("header.cases"), "/testcases"], [t("header.test_plans"), "/testplans"]];
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
     const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
 
@@ -131,7 +132,7 @@ const Header: React.FC = () => {
                                         textDecoration: 'none',
                                     }}
                                 >
-                                    Тест-кейсы
+                                    {t("header.cases")}
                                 </Typography>
                             </MenuItem>
                             <MenuItem onClick={() => handleCloseNavMenuAndNavigate("/testplans")}>
@@ -141,7 +142,7 @@ const Header: React.FC = () => {
                                         color: 'inherit',
                                         textDecoration: 'none',
                                     }}>
-                                    Тест-планы
+                                    {t("header.test_plans")}
                                 </Typography>
                             </MenuItem>
                         </Menu>}
@@ -171,7 +172,7 @@ const Header: React.FC = () => {
                     </Box>
 
                     {window.location.pathname !== '/login' && <Box sx={{flexGrow: 0}}>
-                        <Tooltip title="Уведомления">
+                        <Tooltip title={t("header.notifications")}>
                             <IconButton>
                                 <NotificationsActive sx={{mr: 2, color: 'white'}}/>
                             </IconButton>
@@ -204,7 +205,7 @@ const Header: React.FC = () => {
                                         color: 'inherit',
                                         textDecoration: 'none',
                                     }}
-                                > Профиль </Typography>
+                                > {t("header.profile")} </Typography>
                             </MenuItem>
                             <MenuItem key={"Выйти"} onClick={handleLogout}>
                                 <Typography
@@ -216,7 +217,7 @@ const Header: React.FC = () => {
                                         color: 'inherit',
                                         textDecoration: 'none',
                                     }}
-                                > Выход </Typography>
+                                > {t("header.logout")} </Typography>
                             </MenuItem>
                         </Menu>
                     </Box>}

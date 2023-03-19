@@ -4,6 +4,7 @@ import TextField from "@mui/material/TextField";
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import useStylesTestCases from "./styles.testcases"
+import {useTranslation} from "react-i18next";
 
 interface Props {
     treeSuites: treeSuite[],
@@ -11,6 +12,7 @@ interface Props {
 }
 
 const PaginationSuitesComponent: React.FC<Props> = ({treeSuites, countOfSuitesOnPage}) => {
+    const {t} = useTranslation();
     const [page, setPage] = useState(1);
     const classes = useStylesTestCases()
     const [foundSuites, setFoundSuites] = useState<treeSuite[]>(treeSuites)
@@ -33,7 +35,7 @@ const PaginationSuitesComponent: React.FC<Props> = ({treeSuites, countOfSuitesOn
                 onChange={(content) => onChangeName(content)}
                 autoComplete="off"
                 style={{width: "50%", margin: 10}}
-                placeholder="Поиск..."
+                placeholder={t("suites.search") ?? ""}
                 variant={"outlined"}
             />
             <div data-cy="list-of-suites">
@@ -44,8 +46,7 @@ const PaginationSuitesComponent: React.FC<Props> = ({treeSuites, countOfSuitesOn
                             <Link className={classes.linkSuite} to={`${suite.id}`}>
                                 {suite.name}
                             </Link>
-                            <div className={classes.numOfSuitesCases}>Количество дочерних
-                                сьют: {suite.descendant_count}</div>
+                            <div className={classes.numOfSuitesCases}>{t("suites.child_suites")} {suite.descendant_count}</div>
                         </div>
                     ))}
             </div>

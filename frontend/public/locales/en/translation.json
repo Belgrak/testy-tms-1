@@ -1,0 +1,201 @@
+{
+  "profile": {
+    "tabs": {
+      "password": "Change password",
+      "personal": "Personal data",
+      "settings": "Settings"
+    },
+    "repeatHelper": "Enter new password again",
+    "success": "Changes saved successfully",
+    "check_data": "Current data is incorrect",
+    "current_error": "Current password should be equal with your Enter",
+    "new_error": "New password should be equal with your Enter",
+    "username": "Username",
+    "first_name": "First name",
+    "last_name": "Last name",
+    "email": "Email",
+    "current_password": "Current password",
+    "new_password": "New password",
+    "repeat_password": "Repeat new password",
+    "submit": "Submit"
+  },
+  "settings": {
+    "coming_soon": "This page is under development",
+    "lang": "Language",
+    "save": "Submit"
+  },
+  "login": {
+    "title": "Sign in",
+    "error": "Invalid username or password",
+    "login": "Login",
+    "password": "Password",
+    "submit": "Sign in",
+    "fill_field": "Fill this field"
+  },
+  "project_creation": {
+    "projects": "Projects",
+    "project_title": "Project title",
+    "about_project": "About project",
+    "input_title": "Enter project title",
+    "input_about": "Enter project description",
+    "submit": "Create"
+  },
+  "header": {
+    "cases": "Test Cases",
+    "test_plans": "Test Plans",
+    "profile": "Profile",
+    "logout": "Log out",
+    "notifications": "Notifications"
+  },
+  "project": {
+    "project_activity": "Project activity",
+    "my": "My",
+    "my_activity": "My activity",
+    "project": "Project",
+    "filter": "Filter",
+    "settings": "Settings",
+    "input_start_date": "Select start date",
+    "input_end_date": "Select end date",
+    "plan_title": "Test plan's title",
+    "count": "Tests Count",
+    "modify_date": "Modification date",
+    "not_assigned": "Not assigned",
+    "modify_person": "Editor"
+  },
+  "project_settings": {
+    "project_title": "Project title",
+    "about_project": "Description",
+    "results": "Test statuses",
+    "import_cases": "Import test cases (.xml)",
+    "members": "Members",
+    "input_title": "Edit project title",
+    "input_about": "Edit description",
+    "input_status": "Enter new status",
+    "import": "Import",
+    "input_member": "Enter name/mail/url",
+    "cancel": "Cancel",
+    "submit": "Save"
+  },
+  "suites": {
+    "search": "Search",
+    "create_suite": "Create suite",
+    "count": "Suites count on a page",
+    "suite_title": "Suite title",
+    "about_suite": "Description",
+    "parent_suite": "Parent suite",
+    "input_title": "Enter suite title",
+    "input_about": "Enter description",
+    "input_suite": "Select suite",
+    "default": "None",
+    "cancel": "Cancel",
+    "submit": "Save",
+    "child_suites": "Child suites count:",
+    "create_case": "Create test case",
+    "add_case": "Add test case",
+    "add_suite": "Add suite"
+  },
+  "project_delete": {
+    "warning": "Are You sure, that You want to delete the project",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "case_create": {
+    "title": "Test case title",
+    "fill_field": "Fill this field",
+    "input_title": "Enter test case title",
+    "scenario": "Scenario",
+    "input_scenario": "Enter scenario",
+    "description": "Description",
+    "input_description": "Enter description",
+    "setup": "Setup",
+    "input_setup": "Enter setup",
+    "teardown": "Teardown",
+    "input_teardown": "Enter teardown",
+    "suite": "Suite",
+    "input_suite": "Choose suite",
+    "estimate": "Estimate",
+    "input_estimate": "Enter estimate",
+    "cancel": "Cancel",
+    "submit": "Save"
+  },
+  "suite_delete": {
+    "case_delete": "Are You sure, that You want to delete the test case?",
+    "suite_delete": "Are You sure, that You want to delete the suite? \n This will entail the removal of all child elements.",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "cases_delete": {
+    "cases_delete": "Are You sure, that You want to delete these test cases?",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "cases": {
+    "title": "Title",
+    "scenario": "Scenario",
+    "description": "Description",
+    "setup": "Setup",
+    "teardown": "Teardown",
+    "estimate": "Estimate",
+    "attachments": "Attachments"
+  },
+  "table_suites": {
+    "open_all": "Open all",
+    "close_all": "Close all"
+  },
+  "chart": {
+    "assigned": "Assigned",
+    "not_assigned": "Not assigned",
+    "tests": "Tests "
+  },
+  "attachment": {
+    "attach_file": "Attach file"
+  },
+  "create_plan": {
+    "no_parameters": "Without parameters",
+    "all_parameters": "All parameters",
+    "error_change": "Error handled on changing test plan",
+    "error_create": "Error handled on creating test plan",
+    "title": "Title",
+    "input_title": "Enter test plan title",
+    "parameters": "Parameters",
+    "test_cases": "Test cases",
+    "parent_plan": "Parent test plan",
+    "none": "None",
+    "input_plan": "Enter test plan",
+    "start_date": "Start date",
+    "end_date": "End date",
+    "cancel": "Cancel",
+    "submit": "Save"
+  },
+  "plans_delete": {
+    "plans_delete": "Are You sure, that You want to delete these test plans?",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "test_info": {
+    "created_at": "Created at:",
+    "editor": "Assigned:",
+    "not_assigned": "Not assigned",
+    "estimate": "Estimate:",
+    "setup": "Setup:",
+    "teardown": "Teardown:",
+    "description": "Description:",
+    "result": "Result:",
+    "comments": "Comments:",
+    "input_comments": "Enter comments for test results",
+    "execution_time": "Execution time:",
+    "save": "Save",
+    "load_results": "Enter results",
+    "cancel": "Cancel",
+    "previous_results": "Previous results:"
+  },
+  "testplans": {
+    "count_child": "Child test plans count: ",
+    "count_tests": ". Tests count: ",
+    "started_at": "Started at: ",
+    "due_date": "Due date: ",
+    "not_assigned": "Not assigned",
+    "delete": "Delete",
+    "create_plan": "Create test plan"
+  }
+}

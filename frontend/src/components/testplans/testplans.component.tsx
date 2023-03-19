@@ -16,6 +16,7 @@ import DetailedTestInfoComponent from "./detailed.test.info.component";
 import DeletionDialogTestPlans from "./deletion.dialog.testplans.component";
 import {defaultStatus, statuses} from "../model.statuses";
 import ProfileService from "../../services/profile.service";
+import {useTranslation} from "react-i18next";
 
 export interface treeTestPlan {
     id: number,
@@ -47,6 +48,7 @@ const bfs = (startTrees: treeTestPlan[], testPlanId: number) => {
 }
 
 const TestplansComponent: React.FC = () => {
+    const {t} = useTranslation();
     const classes = useStyles()
     const [showCreationTestPlan, setShowCreationTestPlan] = useState(false)
     const [isForEdit, setIsForEdit] = useState<testPlan | null>(null)
@@ -164,7 +166,7 @@ const TestplansComponent: React.FC = () => {
                                             onClick={() => {
                                                 setOpenDialogDeletionTestPlans(true)
                                             }}>
-                                        Удалить
+                                        {t("testplans.delete")}
                                     </Button>
                                 </td>
                             </tr>
@@ -233,7 +235,7 @@ const TestplansComponent: React.FC = () => {
                             backgroundColor: "#f6f6f6",
                             borderColor: "#000000",
                         }
-                    }} onClick={handleShowCreationTestPlan}>Создать тест-план</Button>
+                    }} onClick={handleShowCreationTestPlan}>{t("testplans.create_plan")}</Button>
                     <CreationTestplanComponent show={showCreationTestPlan} setShow={setShowCreationTestPlan}
                                                testPlans={testPlans}
                                                isForEdit={isForEdit} setIsForEdit={setIsForEdit}/>

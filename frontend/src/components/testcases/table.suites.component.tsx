@@ -13,6 +13,7 @@ import 'react-splitter-layout/lib/index.css';
 import useStylesTestCases from "./styles.testcases"
 import SuiteCaseService from "../../services/suite.case.service";
 import Row from "./row.table.suites.component";
+import {useTranslation} from "react-i18next";
 
 const TableSuites = (props: {
     selected: readonly string[], setSelected: (array: readonly string[]) => void,
@@ -26,6 +27,7 @@ const TableSuites = (props: {
     selectedSuiteForTreeView: treeSuite,
     setSelectedSuiteForTreeView: (suite: treeSuite) => void,
 }) => {
+    const {t} = useTranslation();
     const {
         setShowCreationCase,
         setShowCreationSuite,
@@ -138,7 +140,7 @@ const TableSuites = (props: {
                             component="button" onClick={() => {
                             openAll()
                         }}>
-                            Раскрыть все
+                            {t("table_suites.open_all")}
                         </Link>
                         <Link underline="none">&nbsp;&nbsp;|&nbsp;&nbsp;</Link>
                         <Link
@@ -148,7 +150,7 @@ const TableSuites = (props: {
                             onClick={() => {
                                 closeAll()
                             }}>
-                            Закрыть все
+                            {t("table_suites.close_all")}
                         </Link>
                         <IconButton
                             data-cy="delete-cases-using-checkbox"

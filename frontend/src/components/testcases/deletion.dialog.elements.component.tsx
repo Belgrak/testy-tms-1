@@ -7,6 +7,7 @@ import React from "react";
 import SuiteCaseService from "../../services/suite.case.service";
 import {treeSuite} from "./suites.component";
 import {myCase} from "../models.interfaces";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     openDialogDeletion: boolean,
@@ -29,6 +30,7 @@ const DeletionDialogElements: React.FC<Props> = ({
                                                      setDetailedCaseInfo,
                                                      detailedCaseInfo
                                                  }) => {
+    const {t} = useTranslation();
 
     function disagreeToDelete() {
         setOpenDialogDeletion(false)
@@ -58,7 +60,7 @@ const DeletionDialogElements: React.FC<Props> = ({
         >
             <DialogContent>
                 <DialogContentText style={{fontSize: 20, color: "black", whiteSpace: "pre"}}>
-                    Вы уверены, что хотите удалить выбранные тест-кейсы?
+                    {t("cases_delete.cases_delete")}
                     <br/>
                 </DialogContentText>
                 <DialogActions style={{padding: 0}}>
@@ -75,7 +77,7 @@ const DeletionDialogElements: React.FC<Props> = ({
                         }}
                         onClick={disagreeToDelete}
                         title={"Нет"}>
-                        Нет
+                        {t("cases_delete.no")}
                     </Button>
                     <Button
                         data-cy="agree-to-delete-using-checkbox"
@@ -89,7 +91,7 @@ const DeletionDialogElements: React.FC<Props> = ({
                         }}
                         onClick={agreeToDelete}
                         title={"Да"}>
-                        Да
+                        {t("cases_delete.yes")}
                     </Button>
                 </DialogActions>
             </DialogContent>

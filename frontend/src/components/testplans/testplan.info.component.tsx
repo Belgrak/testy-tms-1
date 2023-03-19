@@ -14,6 +14,7 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import useStyles from "./styles.testplans";
 import {test, testPlan} from "../models.interfaces";
 import EditIcon from "@mui/icons-material/Edit";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     currentTestPlan: testPlan;
@@ -36,6 +37,7 @@ const TestplanInfo: React.FC<Props> = ({
                                            showEnterResult,
                                            setShowEnterResult
                                        }) => {
+    const {t} = useTranslation();
     const classes = useStyles()
 
     return (
@@ -57,10 +59,10 @@ const TestplanInfo: React.FC<Props> = ({
                     </Grid>
                 </Grid>
                 <Typography>
-                    {"Дата начала: " + moment(currentTestPlan.started_at, 'YYYY-MM-DDTHH:mm').format('MMMM D, YYYY HH:mm')}
+                    {t("testplans.started_at") + moment(currentTestPlan.started_at, 'YYYY-MM-DDTHH:mm').format('MMMM D, YYYY HH:mm')}
                 </Typography>
                 <Typography>
-                    {"Дата окончания: " + moment(currentTestPlan.due_date, 'YYYY-MM-DDTHH:mm').format('MMMM D, YYYY HH:mm')}
+                    {t("testplans.due_date") + moment(currentTestPlan.due_date, 'YYYY-MM-DDTHH:mm').format('MMMM D, YYYY HH:mm')}
                 </Typography>
             </div>
             <TableContainer component={Paper}>
@@ -106,7 +108,7 @@ const TestplanInfo: React.FC<Props> = ({
                                 </TableCell>)}
                                 {(!detailedTestInfo || !detailedTestInfo.show) &&
                                 (<TableCell className={classes.tableCellTests}>
-                                    {test.username ?? "не назначен"}
+                                    {test.username ?? t("testplans.not_assigned")}
                                 </TableCell>)}
 
                                 <TableCell className={classes.tableCellTests}>

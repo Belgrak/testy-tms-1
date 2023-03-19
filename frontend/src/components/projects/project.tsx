@@ -29,16 +29,18 @@ import PieChartComponent from "./charts/pie.chart.component";
 import {useNavigate} from "react-router-dom";
 import {useSelector} from "react-redux";
 import {RootState} from "../../app/store";
+import {useTranslation} from "react-i18next";
 
 const Project: React.FC = () => {
+    const {t} = useTranslation();
     const classes = useStyles();
     const navigate = useNavigate();
-    const labels = useMemo(() => [['ID', '#000000'], ['НАЗВАНИЕ ТЕСТ-ПЛАНА', '#000000'], ['ВСЕГО ТЕСТОВ', '#000000']]
+    const labels = useMemo(() => [['ID', '#000000'], [t("project.plan_title"), '#000000'], [t("project.count"), '#000000']]
         .concat(statuses.map((status) => [status.name.toUpperCase(), status.color])
-            .concat([['ДАТА ИЗМЕНЕНИЯ', '#000000'], ['КЕМ ИЗМЕНЕНО', '#000000']])), [])
+            .concat([[t("project.modify_date"), '#000000'], [t("project.modify_person"), '#000000']])), [])
 
     /// From that index starts statuses in const `labels`
-    const minStatusIndex = labels.findIndex((el) => el[0].toUpperCase() === "ВСЕГО ТЕСТОВ") + 1;
+    const minStatusIndex = labels.findIndex((el) => el[0].toUpperCase() === "PASSED");
     /// Till that index contains statuses in const `labels`
     const maxStatusIndex = minStatusIndex + statuses.length - 1;
 
@@ -97,7 +99,7 @@ const Project: React.FC = () => {
             });
             const editor = (editorId != null) ?
                 users.find((value) => value.id === editorId) : null
-            const editorName = (editor != null) ? editor.username : "Не назначен"
+            const editorName = (editor != null) ? editor.username : t("project.not_assigned")
 
             const toReturn = [value.id, value.name, results.all]
             statuses.map((status) => toReturn.push(results[status.name.toLowerCase()]))
@@ -180,7 +182,7 @@ const Project: React.FC = () => {
                     <div style={{marginLeft: '10px'}}>
                         <DesktopDatePicker
                             className={classes.centeredField}
-                            label="Выберите дату начала"
+                            label={t("project.input_start_date")}
                             inputFormat="DD/MM/YYYY"
                             value={startDate}
                             onChange={handleChangeStartDate}
@@ -190,7 +192,7 @@ const Project: React.FC = () => {
                     <div style={{marginLeft: '10px'}}>
                         <DesktopDatePicker
                             className={classes.centeredField}
-                            label="Выберите дату окончания"
+                            label={t("project.input_end_date")}
                             inputFormat="DD/MM/YYYY"
                             value={endDate}
                             onChange={handleChangeEndDate}
@@ -283,32 +285,32 @@ const Project: React.FC = () => {
                             <Stack direction={"row"}>
                                 {isSwitched ?
                                     <Typography fontSize={24} mr={'5px'} ml={'5px'} color={'grey'}>
-                                        Проекта
+                                        {t("project.project")}
                                     </Typography>
                                     :
                                     <Typography fontSize={24} mr={'5px'} ml={'5px'}>
-                                        Активность проекта
+                                        {t("project.project_activity")}
                                     </Typography>
                                 }
                                 <Switch checked={isSwitched} onChange={handleOnSwitch}/>
                                 {isSwitched ?
                                     <Typography fontSize={24} mr={'5px'} ml={'5px'}>
-                                        Моя активность
+                                        {t("project.my_activity")}
                                     </Typography>
                                     :
                                     <Typography fontSize={24} mr={'5px'} ml={'5px'} color={'grey'}>
-                                        Моя
+                                        {t("project.my")}
                                     </Typography>
                                 }
                             </Stack>
                             <Button variant="contained"
                                     style={{marginLeft: '10px', backgroundColor: "#696969"}}
-                                    onClick={handleOnOpenFilter}>Фильтр</Button>
+                                    onClick={handleOnOpenFilter}>{t("project.filter")}</Button>
                             <Button data-cy="openProjectSettingsPage"
                                     variant="contained"
                                     style={{marginLeft: '10px', backgroundColor: "#696969"}}
                                     onClick={handleShowProjectSettings}
-                            >Настройки</Button>
+                            >{t("project.settings")}</Button>
                         </Stack>
                         <ProjectSettings show={showProjectSettings} setShow={setShowProjectSettings}/>
                         {showFilter ? filter : null}

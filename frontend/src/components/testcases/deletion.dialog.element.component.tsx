@@ -7,6 +7,7 @@ import React from "react";
 import SuiteCaseService from "../../services/suite.case.service";
 import {treeSuite} from "./suites.component";
 import {myCase} from "../models.interfaces";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     openDialogDeletion: boolean,
@@ -31,7 +32,7 @@ const DeletionDialogElement: React.FC<Props> = ({
                                                     setDetailedCaseInfo,
                                                     detailedCaseInfo
                                                 }) => {
-
+    const {t} = useTranslation();
 
     function disagreeToDelete() {
         setOpenDialogDeletion(false)
@@ -120,9 +121,8 @@ const DeletionDialogElement: React.FC<Props> = ({
         >
             <DialogContent>
                 <DialogContentText style={{fontSize: 20, color: "black", whiteSpace: "pre"}}>
-                    {(isTypeMyCase(componentForDeletion) && "Вы уверены, что хотите удалить тест-кейс?")
-                        || ("Вы уверены, что хотите удалить сьюту? \n" +
-                            "Это повлечет за собой удаление всех дочерних элементов.")}
+                    {(isTypeMyCase(componentForDeletion) && t("suite_delete.case_delete"))
+                        || t("suite_delete.suite_delete")}
                     <br/>
                 </DialogContentText>
                 <DialogActions style={{padding: 0}}>
@@ -139,7 +139,7 @@ const DeletionDialogElement: React.FC<Props> = ({
                         }}
                         onClick={disagreeToDelete}
                         title={"Нет"}>
-                        Нет
+                        {t("suite_delete.no")}
                     </Button>
                     <Button
                         data-cy="agree-to-delete"
@@ -153,7 +153,7 @@ const DeletionDialogElement: React.FC<Props> = ({
                         }}
                         onClick={agreeToDelete}
                         title={"Да"}>
-                        Да
+                        {t("suite_delete.yes")}
                     </Button>
                 </DialogActions>
             </DialogContent>

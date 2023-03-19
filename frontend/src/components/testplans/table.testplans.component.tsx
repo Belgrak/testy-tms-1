@@ -10,10 +10,12 @@ import {treeTestPlan} from "./testplans.component";
 import TestPlanService from "../../services/testplan.service";
 import {testPlan} from "../models.interfaces";
 import useStyles from "./styles.testplans";
+import {useTranslation} from "react-i18next";
 
 const TableTestPlans = (props: {
     testplan: treeTestPlan, selected: number[], setSelected: (data: number[]) => void,
 }) => {
+    const {t} = useTranslation();
     const classes = useStyles()
     const {testplan, selected, setSelected} = props;
     const [currentTestPlan, setCurrentTestPlan] = useState<testPlan>()
@@ -110,7 +112,7 @@ const TableTestPlans = (props: {
 
                             </div>
                             <div>
-                                {"Количество дочерних тест-планов: " + testplan.children.length + ". Количество тестов: " + currentTestPlan?.tests?.length}
+                                {t("testplans.count_child") + testplan.children.length + t("testplans.count_tests") + currentTestPlan?.tests?.length}
                             </div>
                         </td>
                         <TableCell align="right" style={{width: "25%"}}>

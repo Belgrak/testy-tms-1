@@ -5,8 +5,10 @@ import Container from "@mui/material/Container";
 import {Card, TextField} from "@mui/material";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import {useTranslation} from "react-i18next";
 
 const Login: React.FC = () => {
+    const {t} = useTranslation();
     const classes = useStyles()
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
@@ -24,7 +26,7 @@ const Login: React.FC = () => {
         e.preventDefault();
         AuthService.login(username, password)
             .then(() => window.location.assign("/"))
-            .catch(() => setMessage("Введен неверный логин или пароль"))
+            .catch(() => setMessage(t("login.error") ?? "Введен неверный логин или пароль"))
     }
 
     return (
@@ -32,7 +34,7 @@ const Login: React.FC = () => {
             <Card className={classes.paperLogin}>
                 <div className={classes.divLogin}>
                     <Typography component="h1" variant="h5">
-                        Вход
+                        {t("login.title")}
                     </Typography>
                     <form className={classes.formLogin}
                           onSubmit={handleLogin}
@@ -44,7 +46,7 @@ const Login: React.FC = () => {
                             required
                             fullWidth
                             id="login"
-                            label="Логин"
+                            label={t("login.login")}
                             name="login"
                             autoComplete="on"
                             autoFocus
@@ -59,7 +61,7 @@ const Login: React.FC = () => {
                             fullWidth
                             name="password"
                             autoComplete="on"
-                            label="Пароль"
+                            label={t("login.password")}
                             type="password"
                             id="password"
                             value={password}
@@ -72,7 +74,7 @@ const Login: React.FC = () => {
                             color="primary"
                             className={classes.submitLogin}
                         >
-                            Войти
+                            {t("login.submit")}
                         </Button>
                         {message && (
                             <div className="form-group">

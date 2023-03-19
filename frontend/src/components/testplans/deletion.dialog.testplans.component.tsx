@@ -6,6 +6,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import {treeTestPlan} from "./testplans.component";
 import TestPlanService from "../../services/testplan.service";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     openDialogDeletion: boolean;
@@ -22,6 +23,7 @@ const DeletionDialogTestPlans: React.FC<Props> = ({
                                                       setSelectedForDeletion,
                                                       setTreeTestplans
                                                   }) => {
+    const {t} = useTranslation();
 
     const disagreeToDelete = () => setOpenDialogDeletion(false)
 
@@ -42,7 +44,7 @@ const DeletionDialogTestPlans: React.FC<Props> = ({
         >
             <DialogContent>
                 <DialogContentText sx={{fontSize: 20, color: "black", whiteSpace: "pre"}}>
-                    Вы уверены, что хотите удалить выбранные тест-планы?
+                    {t("plans_delete.plans_delete")}
                     <br/>
                 </DialogContentText>
                 <DialogActions style={{padding: 0}}>
@@ -58,7 +60,7 @@ const DeletionDialogTestPlans: React.FC<Props> = ({
                         }}
                         onClick={disagreeToDelete}
                         title={"Нет"}>
-                        Нет
+                        {t("plans_delete.no")}
                     </Button>
                     <Button
                         sx={{
@@ -71,7 +73,7 @@ const DeletionDialogTestPlans: React.FC<Props> = ({
                         }}
                         onClick={agreeToDelete}
                         title={"Да"}>
-                        Да
+                        {t("plans_delete.yes")}
                     </Button>
                 </DialogActions>
             </DialogContent>

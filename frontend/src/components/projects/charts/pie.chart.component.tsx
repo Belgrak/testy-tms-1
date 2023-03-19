@@ -1,10 +1,12 @@
 import React, {useMemo} from 'react';
 import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip} from "recharts";
 import {test} from "../../models.interfaces";
+import {useTranslation} from "react-i18next";
 
 const PieChartComponent = (props: {
     tests: test[]
 }) => {
+    const {t} = useTranslation();
     let nTestsWithoutUser = useMemo(() => {
         let temp = 0
         props.tests.forEach((test) => {
@@ -17,8 +19,8 @@ const PieChartComponent = (props: {
     // Counting tests with assigned user
 
     const pieData = [
-        {name: 'Назначено', value: props.tests.length - nTestsWithoutUser},
-        {name: 'Не назначено', value: nTestsWithoutUser},
+        {name: t("chart.assigned"), value: props.tests.length - nTestsWithoutUser},
+        {name: t("chart.not_assigned"), value: nTestsWithoutUser},
     ];
 
     return (
@@ -29,7 +31,7 @@ const PieChartComponent = (props: {
                     <Cell fill={"#d99292"}/>
                 </Pie>
                 <Legend/>
-                <Tooltip formatter={(value, name) => ["Тестов: " + value, name]}/>
+                <Tooltip formatter={(value, name) => [t("chart.tests") + value, name]}/>
             </PieChart>
         </ResponsiveContainer>
     );

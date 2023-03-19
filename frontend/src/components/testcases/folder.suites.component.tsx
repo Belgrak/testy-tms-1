@@ -11,6 +11,7 @@ import {TreeItemProps} from '@mui/lab/TreeItem';
 import clsx from 'clsx';
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import {useTranslation} from "react-i18next";
 
 function MinusSquare() {
     return (
@@ -152,6 +153,7 @@ const Suite = (props: {
 const FolderSuites = (props: {
     selectedSuiteForTreeView: treeSuite | undefined
 }) => {
+    const {t} = useTranslation();
     const {selectedSuiteForTreeView} = props;
     const [expanded, setExpanded] = useState<string[]>([])
     const [selected, setSelected] = useState<string[]>([])
@@ -322,7 +324,7 @@ const FolderSuites = (props: {
                             onChange={(content) => onChangeName(content)}
                             autoComplete="off"
                             style={{width: "95%"}}
-                            placeholder="Поиск..."
+                            placeholder={t("suites.search") ?? ""}
                             variant={"outlined"}
                         />
                     </div>

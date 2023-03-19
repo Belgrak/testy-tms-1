@@ -10,6 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     show: boolean;
@@ -26,6 +27,7 @@ interface Node {
 }
 
 const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
+    const {t} = useTranslation();
     const classes = useStyles()
 
     const [statusInput, setStatusInput] = useState("")
@@ -217,7 +219,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                     <div style={{display: 'flex', flexDirection: 'row'}}>
                         <div style={{width: "11%", minWidth: 120, paddingRight: "3%", paddingLeft: "2%"}}>
                             <Typography variant="h6" style={{paddingTop: "24px"}}>
-                                Название
+                                {t("project_settings.project_title")}
                             </Typography>
                         </div>
 
@@ -229,7 +231,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                             fullWidth
                             id="projectNameEdit"
                             value={projectName}
-                            label="Изменить название проекта"
+                            label={t("project_settings.input_title")}
                             onChange={onChangeProjectName}
                         />
                     </div>
@@ -237,7 +239,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                     <div style={{display: 'flex', flexDirection: 'row'}}>
                         <div style={{width: "11%", minWidth: 120, paddingRight: "3%", paddingLeft: "2%"}}>
                             <Typography variant="h6" style={{paddingTop: "24px"}}>
-                                Описание
+                                {t("project_settings.about_project")}
                             </Typography>
                         </div>
 
@@ -249,7 +251,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                             fullWidth
                             id="projectDescriptionEdit"
                             value={projectDescription}
-                            label="Изменить описание проекта"
+                            label={t("project_settings.input_about")}
                             multiline
                             minRows={2}
                             maxRows={5}
@@ -263,7 +265,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                         style={{
                                             paddingTop: "14px"
                                         }}>
-                                Статусы результатов
+                                {t("project_settings.results")}
                             </Typography>
                         </div>
 
@@ -276,7 +278,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                             margin="normal"
                             fullWidth
                             disabled
-                            label="Введите новый статус"
+                            label={t("project_settings.input_status")}
                             onKeyPress={(key) => keyPress(key)}
                             InputProps={{
                                 endAdornment: (
@@ -319,7 +321,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                         style={{
                                             paddingTop: "14px"
                                         }}>
-                                Импорт тест-кейсов (.xml)
+                                {t("project_settings.import_cases")}
                             </Typography>
                         </div>
                         <Button
@@ -329,7 +331,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                             }}
                             component="label"
                         >
-                            Импортировать
+                            {t("project_settings.import")}
                             <input
                                 type="file"
                                 onChange={handleLoadTestCases}
@@ -345,7 +347,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                     <div style={{marginLeft: 15}}>
                         <div>
                             <Typography>
-                                Участники
+                                {t("project_settings.members")}
                             </Typography>
                             <TextField
                                 value={link}
@@ -355,7 +357,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 variant="outlined"
                                 margin="normal"
                                 fullWidth
-                                label="Введите имя/почту/ссылку "
+                                label={t("project_settings.input_member")}
                                 onKeyPress={(key) => keyPressLink(key)}
                                 InputProps={{
                                     endAdornment: (
@@ -403,7 +405,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 color: "#000000",
                             }}
                             >
-                                Отменить
+                                {t("project_settings.cancel")}
                             </Button>
                             <Button data-cy="button-change-project"
                                     onClick={handlePatch} style={{
@@ -415,7 +417,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 color: "#FFFFFF",
                             }}
                             >
-                                Сохранить
+                                {t("project_settings.submit")}
                             </Button>
                         </div>
                     </Grid>

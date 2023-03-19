@@ -14,8 +14,10 @@ import {project} from "../models.interfaces";
 import DeletionDialogProject from "./deletion.dialog.project.component";
 import {useDispatch} from "react-redux";
 import {put} from "../../features/currentProject/currentProjectSlice";
+import {useTranslation} from "react-i18next";
 
 const SelectionProject: React.FC = () => {
+    const {t} = useTranslation();
     const dispatch = useDispatch()
     const classes = useStyles();
     const [expanded, setExpanded] = useState(false);
@@ -41,7 +43,7 @@ const SelectionProject: React.FC = () => {
             <div className={classes.divProjectSelectionPage}>
                 <div className={classes.divProjectSelectionPageLine}>
                     <Typography variant="h6" style={{marginTop: 5}}>
-                        Проекты
+                        {t("project_creation.projects")}
                     </Typography>
                     <IconButton data-cy="project-creation" onClick={() => setExpanded(!expanded)}>
                         <AddCircleOutlineRoundedIcon style={{opacity: expanded ? 0 : 1}}/>

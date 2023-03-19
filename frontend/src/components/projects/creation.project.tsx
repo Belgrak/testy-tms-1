@@ -4,12 +4,14 @@ import Button from "@mui/material/Button";
 import React from "react";
 import ProjectService from "../../services/project.service";
 import {project} from "../models.interfaces";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     setProjects: (projects: project[]) => void
 }
 
 const CreationProject: React.FC<Props> = ({setProjects}) => {
+    const {t} = useTranslation();
     const [name, setName] = React.useState("")
     const [description, setDescription] = React.useState("")
 
@@ -52,12 +54,12 @@ const CreationProject: React.FC<Props> = ({setProjects}) => {
                 }}>
                     <Typography variant="h6"
                                 style={{marginTop: 25, paddingRight: 5, width: 300}}>
-                        Название проекта
+                        {t("project_creation.project_title")}
                     </Typography>
                     <TextField
                         variant="outlined"
                         margin="normal"
-                        placeholder="Введите название проекта"
+                        placeholder={t("project_creation.input_title") ?? ""}
                         required
                         fullWidth
                         id="projectName"
@@ -76,12 +78,12 @@ const CreationProject: React.FC<Props> = ({setProjects}) => {
                 }}>
                     <Typography variant="h6"
                                 style={{marginTop: 25, marginRight: 5, width: 300}}>
-                        О проекте
+                        {t("project_creation.about_project")}
                     </Typography>
                     <TextField
                         variant="outlined"
                         margin="normal"
-                        placeholder="Введите описание проекта"
+                        placeholder={t("project_creation.input_about") ?? ""}
                         multiline
                         minRows={6}
                         maxRows={12}
@@ -105,7 +107,7 @@ const CreationProject: React.FC<Props> = ({setProjects}) => {
                         variant={'contained'}
                         color={'secondary'}
                     >
-                        Создать
+                        {t("project_creation.submit")}
                     </Button>
                 </div>
             </div>

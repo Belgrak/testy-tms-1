@@ -15,6 +15,7 @@ import {myCase} from "../models.interfaces";
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import AttachmentButton from "../attachment/attachment_button";
 import AttachmentService from "../../services/attachment.servise";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     show: boolean;
@@ -42,6 +43,7 @@ const CreationCase: React.FC<Props> = ({
                                            setSelectedSuiteForTreeView,
                                            selectedSuiteForTreeView
                                        }) => {
+    const {t} = useTranslation();
     const classes = useStyles()
     const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string }>({
         id: selectedSuiteForTreeView.id,
@@ -244,13 +246,12 @@ const CreationCase: React.FC<Props> = ({
                 <Grid xs={9} item style={{padding: 20}}>
                     <Grid>
                         <Typography variant="h6">
-                            Название тест-кейса
+                            {t("case_create.title")}
                         </Typography>
                         <CustomWidthTooltip
                             title={<Grid data-cy="fill-field-note"
                                          style={{display: "flex", flexDirection: 'row'}}><WarningAmberIcon
-                                sx={{fontSize: 25, marginRight: 1}}/> <Typography> Заполните это
-                                поле.</Typography></Grid>} placement="top-start" arrow
+                                sx={{fontSize: 25, marginRight: 1}}/> <Typography>{t("case_create.fill_field")}</Typography></Grid>} placement="top-start" arrow
                             open={fillFieldName}>
                             <TextField
                                 id="nameCaseTextField"
@@ -262,20 +263,19 @@ const CreationCase: React.FC<Props> = ({
                                 autoComplete="off"
                                 required
                                 fullWidth
-                                label="Введите название тест-кейса"
+                                label={t("case_create.input_title")}
                             />
                         </CustomWidthTooltip>
                     </Grid>
 
                     <Grid className={classes.gridContent}>
                         <Typography variant="h6">
-                            Сценарий
+                            {t("case_create.scenario")}
                         </Typography>
                         <CustomWidthTooltip
                             title={<Grid data-cy="fill-field-note"
                                          style={{display: "flex", flexDirection: 'row'}}><WarningAmberIcon
-                                sx={{fontSize: 25, marginRight: 1}}/> <Typography> Заполните это
-                                поле.</Typography></Grid>} placement="top-start" arrow
+                                sx={{fontSize: 25, marginRight: 1}}/> <Typography>{t("case_create.fill_field")}</Typography></Grid>} placement="top-start" arrow
                             open={fillFieldScenario}>
                             <TextField
                                 id="scenarioCaseTextField"
@@ -286,7 +286,7 @@ const CreationCase: React.FC<Props> = ({
                                 margin="normal"
                                 fullWidth
                                 required
-                                label="Введите сценарий тест-кейса"
+                                label={t("case_create.input_scenario")}
                                 autoComplete="off"
                                 multiline
                                 minRows={2}
@@ -296,7 +296,7 @@ const CreationCase: React.FC<Props> = ({
                     </Grid>
                     <Grid className={classes.gridContent}>
                         <Typography variant="h6">
-                            Описание
+                            {t("case_create.description")}
                         </Typography>
 
                         <TextField
@@ -307,7 +307,7 @@ const CreationCase: React.FC<Props> = ({
                             value={description}
                             margin="normal"
                             fullWidth
-                            label="Введите описание тест-кейса"
+                            label={t("case_create.input_description")}
                             autoComplete="off"
                             multiline
                             minRows={2}
@@ -316,7 +316,7 @@ const CreationCase: React.FC<Props> = ({
                     </Grid>
                     <Grid className={classes.gridContent}>
                         <Typography variant="h6">
-                            Подготовка теста
+                            {t("case_create.setup")}
                         </Typography>
 
                         <TextField
@@ -327,7 +327,7 @@ const CreationCase: React.FC<Props> = ({
                             value={setup}
                             margin="normal"
                             fullWidth
-                            label="Введите инструкции"
+                            label={t("case_create.input_setup")}
                             autoComplete="off"
                             multiline
                             minRows={2}
@@ -336,7 +336,7 @@ const CreationCase: React.FC<Props> = ({
                     </Grid>
                     <Grid className={classes.gridContent}>
                         <Typography variant="h6">
-                            Очистка после теста
+                            {t("case_create.teardown")}
                         </Typography>
                         <TextField
                             id="case-teardown"
@@ -346,7 +346,7 @@ const CreationCase: React.FC<Props> = ({
                             value={teardown}
                             margin="normal"
                             fullWidth
-                            label="Введите инструкции"
+                            label={t("case_create.input_teardown")}
                             autoComplete="off"
                             multiline
                             minRows={2}
@@ -361,18 +361,17 @@ const CreationCase: React.FC<Props> = ({
                     <Grid style={{marginLeft: 15}}>
                         <Grid style={{marginBottom: 34}}>
                             <Typography style={{marginBottom: 10}}>
-                                Сьюта
+                                {t("case_create.suite")}
                             </Typography>
 
                             <FormControl required style={{minWidth: "90%"}}
                                          className={classes.textFieldSelectCreationCaseSuite}>
-                                <InputLabel id="select-suite">Выберите
-                                    сьюту</InputLabel>
+                                <InputLabel id="select-suite">{t("case_create.input_suite")}</InputLabel>
                                 <Select
                                     data-cy="select-parent-suite-for-case"
                                     labelId="select-suite"
                                     value={selectedSuite.name}
-                                    label="Выберите сьюту"
+                                    label={t("case_create.input_suite")}
                                     onChange={(e) => chooseSuite(e)}
                                     renderValue={(selected) => <Grid>{selected}</Grid>}
                                     MenuProps={MenuProps}
@@ -384,7 +383,7 @@ const CreationCase: React.FC<Props> = ({
                         </Grid>
                         <Grid style={{marginBottom: 34}}>
                             <Typography>
-                                Время выполнения
+                                {t("case_create.estimate")}
                             </Typography>
                             <TextField
                                 id="case-time-run"
@@ -396,7 +395,7 @@ const CreationCase: React.FC<Props> = ({
                                 margin="normal"
                                 autoComplete="off"
                                 fullWidth
-                                label="Введите время"
+                                label={t("case_create.input_estimate")}
                             />
                         </Grid>
                         <Grid>
@@ -416,7 +415,7 @@ const CreationCase: React.FC<Props> = ({
                                 color: "#000000",
                             }}
                             >
-                                Отменить
+                                {t("case_create.cancel")}
                             </Button>
                             <Button
                                 onClick={createCase}
@@ -430,7 +429,7 @@ const CreationCase: React.FC<Props> = ({
                                     color: "#FFFFFF",
                                 }}
                             >
-                                Сохранить
+                                {t("case_create.submit")}
                             </Button>
                         </Grid>
                     </Grid>

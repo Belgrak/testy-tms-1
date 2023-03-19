@@ -8,8 +8,9 @@ import Typography from "@mui/material/Typography";
 import Select from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import {useTranslation} from "react-i18next";
+import i18next from "i18next";
 
 const ColorModeContext = React.createContext({
     toggleColorMode: () => {
@@ -17,6 +18,7 @@ const ColorModeContext = React.createContext({
 });
 
 const Settings: React.FC = () => {
+    const { t, i18n } = useTranslation();
     const [mode, setMode] = React.useState<'light' | 'dark'>('light');
     const colorMode = React.useMemo(
         () => ({
@@ -37,12 +39,16 @@ const Settings: React.FC = () => {
         [mode],
     );
 
-    const [language, setLanguage] = useState("Русский")
+    const [language, setLanguage] = useState(i18next.language || "ru")
 
     const handleOnChangeLanguage = (event: SelectChangeEvent<string>) => setLanguage(event.target.value)
+    const handleOnSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        i18n.changeLanguage(language).catch((e) => console.log(e))
+    }
 
     return <ColorModeContext.Provider value={colorMode}>
-        <Typography color={"darkorange"} component={"h3"}>Данная страница находится на доработке</Typography>
+        <Typography color={"darkorange"} component={"h3"}>{t("settings.coming_soon")}</Typography>
         <form
             style={{
                 display: 'flex',
@@ -50,40 +56,40 @@ const Settings: React.FC = () => {
                 justifyContent: 'center',
                 margin: 1,
                 minWidth: 200
-            }}>
-            <InputLabel>Язык интерфейса</InputLabel>
+            }}
+        onSubmit={handleOnSubmit}>
+            <InputLabel>{t("settings.lang")}</InputLabel>
             <Select
                 autoWidth
                 label="Язык интерфейса"
                 value={language}
                 onChange={handleOnChangeLanguage}
             >
-                <MenuItem value={"Русский"}>Русский</MenuItem>
-                <MenuItem value={"English"}>English</MenuItem>
+                <MenuItem value={"ru"}>Русский</MenuItem>
+                <MenuItem value={"en"}>English</MenuItem>
             </Select>
-            <ThemeProvider theme={theme}>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        width: '100%',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: 'background.default',
-                        color: 'text.primary',
-                        borderRadius: 1,
-                        p: 3,
-                    }}
-                >
-                    {theme.palette.mode} mode
-                    <IconButton sx={{ml: 1}} onClick={colorMode.toggleColorMode} color="inherit">
-                        {theme.palette.mode === 'dark' ? <Brightness7Icon/> : <Brightness4Icon/>}
-                    </IconButton>
-                </Box>
-
-                <Button type={"submit"} variant={"contained"}
-                        sx={{margin: '10px 10px 10px 10px'}}>Сохранить</Button>
-
-            </ThemeProvider>
+            <Button type={"submit"} variant={"contained"}
+                    sx={{margin: '10px 10px 10px 10px'}}>{t("settings.save")}</Button>
+            {/*<ThemeProvider theme={theme}>*/}
+            {/*    <Box*/}
+            {/*        sx={{*/}
+            {/*            display: 'flex',*/}
+            {/*            width: '100%',*/}
+            {/*            alignItems: 'center',*/}
+            {/*            justifyContent: 'center',*/}
+            {/*            bgcolor: 'background.default',*/}
+            {/*            color: 'text.primary',*/}
+            {/*            borderRadius: 1,*/}
+            {/*            p: 3,*/}
+            {/*        }}*/}
+            {/*    >*/}
+            {/*        {theme.palette.mode} mode*/}
+            {/*        <IconButton sx={{ml: 1}} onClick={colorMode.toggleColorMode} color="inherit">*/}
+            {/*            {theme.palette.mode === 'dark' ? <Brightness7Icon/> : <Brightness4Icon/>}*/}
+            {/*        </IconButton>*/}
+            {/*    </Box>*/}
+            {/*    */}
+            {/*</ThemeProvider>*/}
         </form>
     </ColorModeContext.Provider>
 }

@@ -13,9 +13,11 @@ import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import AuthService from "../services/Authorization/auth.service";
+import {useTranslation} from "react-i18next";
 
 const Profile: React.FC = () => {
     const classes = useStyles()
+    const {t} = useTranslation();
     const [isLoaded, setIsLoaded] = useState<boolean>(false)
     const [view, setView] = useState("profile")
     const handleOnChangeView = (event: SyntheticEvent, newValue: string) => {
@@ -26,7 +28,7 @@ const Profile: React.FC = () => {
         setMessage("")
         setRepeatError(false)
         setPasswordError(false)
-        setRepeatHelperText("Пожалуйста, введите новый пароль повторно")
+        setRepeatHelperText(t("profile.repeatHelper") ?? "")
         setPasswordHelperText("")
         setView(newValue)
     }
@@ -46,7 +48,7 @@ const Profile: React.FC = () => {
     const [password, setPassword] = useState<string>("")
     const [repeatError, setRepeatError] = useState(false)
     const [passwordError, setPasswordError] = useState(false)
-    const [repeatHelperText, setRepeatHelperText] = useState<string>("Пожалуйста, введите новый пароль повторно")
+    const [repeatHelperText, setRepeatHelperText] = useState<string>(t("profile.repeatHelper") ?? "")
     const [passwordHelperText, setPasswordHelperText] = useState<string>("")
     const [message, setMessage] = useState<string>("")
 
@@ -72,21 +74,21 @@ const Profile: React.FC = () => {
                     first_name: firstName,
                     last_name: lastName,
                     email: email
-                }).then(() => setMessage("Изменения успешно сохранены"))
+                }).then(() => setMessage(t("profile.success") ?? ""))
                     .catch((error) => {
-                        setMessage("Пожалуйста, проверьте введенные данные")
+                        setMessage(t("profile.check_data") ?? "")
                         console.log(error)
                     })
             }
         }).catch(() => {
-            setPasswordProfileHelperText("Текущий пароль не совпадает с указанным")
+            setPasswordProfileHelperText(t("profile.current_error") ?? "")
             setPasswordProfileError(true)
         })
     }
     const handleOnSavePassword = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (newPassword !== repeatNewPassword) {
-            setRepeatHelperText("Новый пароль не совпадает с указанным")
+            setRepeatHelperText(t("profile.new_error") ?? "")
             setRepeatError(true)
             return;
         }
@@ -101,15 +103,15 @@ const Profile: React.FC = () => {
                     username: currentUsername,
                     password: newPassword,
                 }).then(() => {
-                    setMessage("Изменения успешно сохранены")
+                    setMessage(t("profile.success") ?? "")
                 })
                     .catch((error) => {
-                        setMessage("Пожалуйста, проверьте введенные данные")
+                        setMessage(t("profile.check_data") ?? "")
                         console.log(error)
                     })
             }
         }).catch(() => {
-            setPasswordHelperText("Текущий пароль не совпадает с указанным")
+            setPasswordHelperText(t("profile.current_error") ?? "")
             setPasswordError(true)
         })
     }
@@ -147,76 +149,76 @@ const Profile: React.FC = () => {
             <TabContext value={view}>
                 <Box sx={{display: {xs: 'none', md: 'flex'}, borderBottom: 1, borderColor: 'divider'}}>
                     <TabList onChange={handleOnChangeView}>
-                        <Tab label="Личные данные" value={"profile"}/>
-                        <Tab label="Смена пароля" value={"changePassword"}/>
-                        <Tab label="Настройки" value={"settings"}/>
+                        <Tab label={t("profile.tabs.personal")} value={"profile"}/>
+                        <Tab label={t("profile.tabs.password")} value={"changePassword"}/>
+                        <Tab label={t("profile.tabs.settings")} value={"settings"}/>
                     </TabList>
                 </Box>
                 <Box sx={{display: {xs: 'flex', md: 'none'}, borderBottom: 1, borderColor: 'divider'}}>
                     <TabList orientation="vertical" onChange={handleOnChangeView}>
-                        <Tab label="Личные данные" value={"profile"}/>
-                        <Tab label="Смена пароля" value={"changePassword"}/>
-                        <Tab label="Настройки" value={"settings"}/>
+                        <Tab label={t("profile.tabs.personal")} value={"profile"}/>
+                        <Tab label={t("profile.tabs.password")} value={"changePassword"}/>
+                        <Tab label={t("profile.tabs.settings")} value={"settings"}/>
                     </TabList>
                 </Box>
                 <TabPanel value={"profile"}>
                     <form onSubmit={handleOnSavePersonalData}
                           style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                         <TextField id={"username"} className={classes.centeredField} variant={"outlined"} required
-                                   label={'Имя пользователя'}
+                                   label={t("profile.username")}
                                    style={{margin: '10px 10px 10px 10px'}}
                                    value={username} onChange={handleChangeUsername}/>
                         <TextField id={"first_name"} className={classes.centeredField} variant={"outlined"}
-                                   label={'Имя'}
+                                   label={t("profile.first_name")}
                                    style={{margin: '10px 10px 10px 10px'}}
                                    value={firstName}
                                    onChange={handleChangeFirstName}/>
                         <TextField id={"last_name"} className={classes.centeredField} variant={"outlined"}
-                                   label={'Фамилия'}
+                                   label={t("profile.last_name")}
                                    style={{margin: '10px 10px 10px 10px'}}
                                    value={lastName}
                                    onChange={handleChangeLastName}/>
                         <TextField id={"email"} type={"email"} className={classes.centeredField} variant={"outlined"}
-                                   label={'Адрес электронной почты'}
+                                   label={t("profile.email")}
                                    style={{margin: '10px 10px 10px 10px'}}
                                    value={email} onChange={handleChangeEmail}/>
                         <TextField id={"passwordProfile"} className={classes.centeredField} variant={"outlined"}
                                    required
                                    error={passwordProfileError} type={"password"}
-                                   label={'Текущий пароль'}
+                                   label={t("profile.current_password")}
                                    style={{margin: '10px 10px 10px 10px'}}
                                    value={passwordProfile} onChange={handleChangePasswordProfile}
                                    helperText={passwordProfileHelperText}/>
 
                         <Button type="submit" variant={"contained"}
-                                sx={{margin: '10px 10px 10px 10px'}}>Сохранить</Button>
+                                sx={{margin: '10px 10px 10px 10px'}}>{t("profile.submit")}</Button>
                     </form>
                 </TabPanel>
                 <TabPanel value={"changePassword"}>
                     <form onSubmit={handleOnSavePassword}
                           style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                         <TextField id={"new_password"} className={classes.centeredField} variant={"outlined"} required
-                                   label={'Новый пароль'}
+                                   label={t("profile.new_password")}
                                    style={{margin: '10px 10px 10px 10px'}}
                                    type={"password"}
                                    value={newPassword}
                                    onChange={handleChangeNewPassword}/>
                         <TextField id={"repeat_password"} className={classes.centeredField} variant={"outlined"}
                                    required
-                                   error={repeatError} label={'Подтверждение пароля'}
+                                   error={repeatError} label={t("profile.repeat_password")}
                                    style={{margin: '10px 10px 10px 10px'}}
                                    type={"password"} value={repeatNewPassword}
                                    onChange={handleChangeRepeatNewPassword}
                                    helperText={repeatHelperText}/>
                         <TextField id={"password"} className={classes.centeredField} variant={"outlined"} required
                                    error={passwordError} type={"password"}
-                                   label={'Текущий пароль'}
+                                   label={t("profile.current_password")}
                                    style={{margin: '10px 10px 10px 10px'}}
                                    value={password} onChange={handleChangePassword}
                                    helperText={passwordHelperText}/>
 
                         <Button type="submit" variant={"contained"}
-                                sx={{margin: '10px 10px 10px 10px'}}>Сохранить</Button>
+                                sx={{margin: '10px 10px 10px 10px'}}>{t("profile.submit")}</Button>
                     </form>
                 </TabPanel>
                 <TabPanel value={"settings"}>

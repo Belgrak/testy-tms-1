@@ -8,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SuiteCaseService from "../../services/suite.case.service";
 import Attachments from "../attachment/attachments";
 import {attachment} from "../models.interfaces";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     myCase: myCase;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
+    const {t} = useTranslation();
     const [, setAttachments] = React.useState<attachment[]>()
     useEffect(() => {
         SuiteCaseService.getCaseById(myCase.id).then((response) => {
@@ -29,7 +31,7 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
             <Grid>
                 <Grid style={{display: "flex", justifyContent: "space-between"}}>
                     <Typography variant="h6">
-                        Название
+                        {t("cases.title")}
                     </Typography>
                     <IconButton data-cy="close-info-case" size={"small"}
                                 onClick={() => setDetailedCaseInfo(SuiteCaseService.getEmptyDetailedCaseInfo())}>
@@ -43,7 +45,7 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
             </Grid>
             <Grid>
                 <Typography variant="h6">
-                    Сценарий
+                    {t("cases.scenario")}
                 </Typography>
                 <Grid data-cy="detailed-info-case-scenario">
                     {myCase.scenario}
@@ -52,7 +54,7 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
             </Grid>
             {myCase.description && <Grid>
                 <Typography variant="h6">
-                    Описание
+                    {t("cases.description")}
                 </Typography>
                 <Grid data-cy="detailed-info-case-setup">
                     {myCase.description}
@@ -61,7 +63,7 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
             </Grid>}
             {myCase.setup && <Grid>
                 <Typography variant="h6">
-                    Подготовка теста
+                    {t("cases.setup")}
                 </Typography>
                 <Grid data-cy="detailed-info-case-setup">
                     {myCase.setup}
@@ -70,7 +72,7 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
             </Grid>}
             {myCase.teardown && <Grid>
                 <Typography variant="h6">
-                    Очистка после теста
+                    {t("cases.teardown")}
                 </Typography>
                 <Grid data-cy="detailed-info-case-teardown">
                     {myCase.teardown}
@@ -79,7 +81,7 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
             </Grid>}
             {myCase.estimate && <Grid>
                 <Typography variant="h6">
-                    Время выполнения
+                    {t("cases.estimate")}
                 </Typography>
                 <Grid data-cy="detailed-info-case-estimate">
                     {myCase.estimate}
@@ -88,7 +90,7 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
             </Grid>}
             {myCase.attachments && myCase.attachments?.length !== 0 && <Grid>
                 <Typography variant="h6">
-                    Прикрепленные файлы
+                    {t("cases.attachments")}
                 </Typography>
                 <Grid>
                     <Attachments attachments={myCase.attachments}/>

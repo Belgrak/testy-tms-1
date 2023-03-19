@@ -20,10 +20,14 @@
     "@types/react-dom": "18.0.6",
     "axios": "1.1.3",
     "fast-xml-parser": "4.0.12",
+    "i18next": "^22.4.11",
+    "i18next-browser-languagedetector": "^7.0.1",
+    "i18next-http-backend": "^2.1.1",
     "moment": "2.29.4",
     "react": "18.2.0",
     "react-checkbox-tree": "1.8.0",
     "react-dom": "18.2.0",
+    "react-i18next": "^12.2.0",
     "react-redux": "^8.0.5",
     "react-router-dom": "6.4.2",
     "react-scripts": "5.0.1",
@@ -43,6 +47,7 @@
     "open:cypress": "start-server-and-test start-with-coverage http://localhost:3000 cypress-open",
     "cypress-open": "cypress open",
     "cypress-run": "cypress run",
+    "translations-scan": "i18next-scanner --config src/i18next-scanner.config.js src/components/*/*/*.tsx  src/components/*/*.tsx src/components/*.tsx",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -69,6 +74,7 @@
     "@types/react-splitter-layout": "3.0.2",
     "babel-plugin-istanbul": "^6.1.1",
     "cypress": "^12.4.0",
+    "i18next-scanner": "^4.1.1",
     "istanbul-lib-coverage": "^3.2.0",
     "nyc": "^15.1.0",
     "start-server-and-test": "^1.15.3"

@@ -4,12 +4,14 @@ import {Chip, Grid, Tooltip} from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
 import AttachmentService from "../../services/attachment.servise";
 import useStyles from "../../styles/styles";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     setFilesSelected: (files: File[]) => void;
 }
 
 const AttachmentButton: React.FC<Props> = ({setFilesSelected}) => {
+    const {t} = useTranslation();
     const [attachments, setAttachments] = React.useState<File[]>()
 
     const handleFileChange = function (e: React.ChangeEvent<HTMLInputElement>) {
@@ -52,7 +54,7 @@ const AttachmentButton: React.FC<Props> = ({setFilesSelected}) => {
                     component="span"
                     variant="contained"
                 >
-                    Прикрепить файл
+                    {t("attachment.attach_file")}
                 </Button>
             </label>
             <Grid className={classes.stackTags}>

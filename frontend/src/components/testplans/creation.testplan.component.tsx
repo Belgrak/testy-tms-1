@@ -27,6 +27,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import {treeSuite} from "../testcases/suites.component";
 import {param, testPlan} from "../models.interfaces";
 import SuiteCaseService from "../../services/suite.case.service";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     show: boolean;
@@ -52,6 +53,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                                         isForEdit,
                                                         setIsForEdit,
                                                     }) => {
+    const {t} = useTranslation();
     const classes = useStyles()
 
     const [selectedTestPlan, setSelectedTestPlan] = useState<{ id: number, name: string } | null>(null)
@@ -178,8 +180,8 @@ const CreationTestplanComponent: React.FC<Props> = ({
         return arr
     }
 
-    const nodes = [{value: 'no', label: 'Без параметров', icon: <BlockIcon className={classes.icons}/>},
-        {value: 'all', label: 'Все параметры', children: nodesChildren(), disabled: disable}];
+    const nodes = [{value: 'no', label: t("create_plan.no_parameters"), icon: <BlockIcon className={classes.icons}/>},
+        {value: 'all', label: t("create_plan.all_parameters"), children: nodesChildren(), disabled: disable}];
 
     function testsNodes(treeSuites: treeSuite[]) {
         let arr: Node[] = []
@@ -251,7 +253,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                     is_archive: isForEdit.is_archive
                 }).catch((e) => {
                     console.log(e)
-                    setMessage("Не удалось изменить тест-план")
+                    setMessage(t("create_plan.error_change") ?? "")
                 })
                 window.location.reload()
             } else {
@@ -260,7 +262,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                 })
                     .catch((e) => {
                         console.log(e);
-                        setMessage("Не удалось создать тест-план")
+                        setMessage(t("create_plan.error_create") ?? "")
                     });
             }
             handleClose()
@@ -299,7 +301,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
 
                             <Grid item xs={2}>
                                 <Typography variant="h6" sx={{padding: "25px"}}>
-                                    Название
+                                    {t("create_plan.title")}
                                 </Typography>
                             </Grid>
                             <Grid item xs={7}>
@@ -314,7 +316,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                     autoFocus
                                     required
                                     fullWidth
-                                    label="Введите название тест-плана"
+                                    label={t("create_plan.input_title")}
                                 />
                             </Grid>
 
@@ -323,7 +325,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                         <Grid container spacing={2} className={classes.gridContent}>
                             <Grid item xs={2}>
                                 <Typography variant="h6">
-                                    Параметры
+                                    {t("create_plan.parameters")}
                                 </Typography>
                             </Grid>
                             <Grid item xs={10}>
@@ -357,7 +359,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                         />) :
                                         (<CheckboxTree nodes={[{
                                             value: 'no',
-                                            label: 'Без параметров',
+                                            label: t("create_plan.no_parameters"),
                                             disabled: true,
                                             showCheckbox: false,
                                             icon: <BlockIcon className={classes.icons}/>
@@ -372,7 +374,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                         <Grid container spacing={0} className={classes.gridContent}>
                             <Grid item xs={2}>
                                 <Typography variant="h6">
-                                    Тест-кейсы
+                                    {t("create_plan.test_cases")}
                                 </Typography>
                             </Grid>
                             <Grid item xs={10}>
@@ -418,16 +420,16 @@ const CreationTestplanComponent: React.FC<Props> = ({
                         <Grid style={{marginLeft: 15}}>
                             <Grid style={{marginBottom: 34}}>
                                 <Typography style={{marginBottom: 10}}>
-                                    Родительский тест-план
+                                    {t("create_plan.parent_plan")}
                                 </Typography>
 
                                 <FormControl style={{minWidth: "90%"}} className={classes.textFieldTestplansAndTests}>
-                                    <InputLabel id="select-test-plan">Выберите тест-план</InputLabel>
+                                    <InputLabel id="select-test-plan">{t("create_plan.input_plan")}</InputLabel>
                                     <Select
                                         data-cy="select-parent-test-plan"
                                         labelId="select-test-plan"
-                                        value={selectedTestPlan ? selectedTestPlan.name : "Не выбрано"}
-                                        label="Выберите тест-план"
+                                        value={selectedTestPlan ? selectedTestPlan.name : t("create_plan.none")}
+                                        label={t("create_plan.input_plan")}
                                         onChange={(e) => chooseTestPlan(e)}
                                         renderValue={(selected) => <Grid>{selected}</Grid>}
                                         MenuProps={MenuProps}
@@ -440,7 +442,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                             <Grid sx={{marginBottom: "10px"}}>
                                 <LocalizationProvider dateAdapter={AdapterMoment}>
                                     <DesktopDatePicker
-                                        label="Дата начала"
+                                        label={t("create_plan.start_date")}
                                         inputFormat="DD/MM/YYYY"
                                         value={startDate}
                                         onChange={handleStartDate}
@@ -452,7 +454,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                             <Grid sx={{marginBottom: "34px"}}>
                                 <LocalizationProvider dateAdapter={AdapterMoment}>
                                     <DesktopDatePicker
-                                        label="Дата окончания"
+                                        label={t("create_plan.end_date")}
                                         inputFormat="DD/MM/YYYY"
                                         value={endDate}
                                         onChange={handleEndDate}
@@ -476,7 +478,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                         color: "#000000",
                                     }}
                                 >
-                                    Отменить
+                                    {t("create_plan.cancel")}
                                 </Button>
                                 <Button
                                     data-cy="agree-to-create-testplan"
@@ -490,7 +492,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                         color: "#FFFFFF",
                                     }}
                                 >
-                                    Сохранить
+                                    {t("create_plan.submit")}
                                 </Button>
                             </Grid>
                         </Grid>

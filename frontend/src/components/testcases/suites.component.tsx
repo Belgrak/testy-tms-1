@@ -18,6 +18,7 @@ import {useParams, useNavigate} from "react-router-dom";
 import FormControl from "@mui/material/FormControl";
 import useStylesGlobal from "../../styles/styles";
 import {myCase} from "../models.interfaces";
+import {useTranslation} from "react-i18next";
 
 
 export const CustomWidthTooltip = styled(({className, ...props}: TooltipProps) => (
@@ -71,6 +72,7 @@ export interface mainFieldInSuite {
 
 
 const SuitesComponent = () => {
+    const {t} = useTranslation();
     const classes = useStyles()
     const [showCreationCase, setShowCreationCase] = useState(false)
     const [showCreationSuite, setShowCreationSuite] = useState(false)
@@ -189,8 +191,7 @@ const SuitesComponent = () => {
                                     "&:hover": {
                                         backgroundColor: "#fffafa",
                                     }
-                                }} onClick={handleShowCreationCase}>Создать
-                                тест-кейс</Button>
+                                }} onClick={handleShowCreationCase}>{t("suites.create_case")}</Button>
                             <CreationCase show={showCreationCase} setShow={setShowCreationCase}
                                           selectedSuiteCome={selectedSuiteCome} setTreeSuites={setTreeSuites}
                                           infoCaseForEdit={infoCaseForEdit}
@@ -211,7 +212,7 @@ const SuitesComponent = () => {
                         "&:hover": {
                             backgroundColor: "#777676",
                         }
-                    }} onClick={handleShowCreationSuite}>Создать сьюту</Button>
+                    }} onClick={handleShowCreationSuite}>{t("suites.create_suite")}</Button>
                     <CreationSuite show={showCreationSuite} setShow={setShowCreationSuite}
                                    selectedSuiteCome={selectedSuiteCome} setTreeSuites={setTreeSuites}
                                    setSelectedSuiteForTreeView={setSelectedSuiteForTreeView}
@@ -225,10 +226,10 @@ const SuitesComponent = () => {
                     <div>
                         <FormControl sx={{minWidth: "90%", margin: "25px 0px 0px 15px"}}
                                      className={classesGlobal.textFieldSelectCreationCaseSuite}>
-                            <InputLabel>Количество сьют на одной странице</InputLabel>
+                            <InputLabel>{t("suites.count")}</InputLabel>
                             <Select
                                 value={countOfSuitesOnPage}
-                                label="Количество сьют на одной странице"
+                                label={t("suites.count")}
                                 onChange={(e) => onChangeSuitesOnPage(e)}
                                 MenuProps={MenuProps}
                             >
