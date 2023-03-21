@@ -181,7 +181,7 @@ const DetailedTestInfo: React.FC<Props> = ({
             {description &&
             (<div>
                 <div className={classes.divBold}>
-                    Описание:
+                    {t("test_info.description")}
                 </div>
                 <div>
                     <MDEditor.Markdown source={description} style={{whiteSpace: 'pre-wrap'}}/>
@@ -374,7 +374,7 @@ const DetailedTestInfo: React.FC<Props> = ({
 
                             <TableCell align="left" sx={{verticalAlign: 'top', paddingTop: "9px"}}>
                                 <div className={classes.divBold}>
-                                    {t("test_info.comments")}
+                                    {t("test_info.comment")}
                                 </div>
                                 <MDEditor.Markdown source={testResult?.comment} style={{whiteSpace: 'pre-wrap'}}/>
                                 <Attachments attachments={attachments.get(testResult.id)}/>

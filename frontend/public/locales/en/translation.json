@@ -160,12 +160,15 @@
     "parameters": "Parameters",
     "test_cases": "Test cases",
     "parent_plan": "Parent test plan",
+    "description": "Description",
     "none": "None",
     "input_plan": "Enter test plan",
     "start_date": "Start date",
     "end_date": "End date",
     "cancel": "Cancel",
-    "submit": "Save"
+    "submit": "Save",
+    "no_parameters_need_parameters": "Without parameters (You should create a parameter)",
+    "without_tests": "Without tests (You should create a test case)"
   },
   "plans_delete": {
     "plans_delete": "Are You sure, that You want to delete these test plans?",
@@ -182,6 +185,7 @@
     "description": "Description:",
     "result": "Result:",
     "comments": "Comments:",
+    "comment": "Comment:",
     "input_comments": "Enter comments for test results",
     "execution_time": "Execution time:",
     "save": "Save",
@@ -196,6 +200,7 @@
     "due_date": "Due date: ",
     "not_assigned": "Not assigned",
     "delete": "Delete",
-    "create_plan": "Create test plan"
+    "create_plan": "Create test plan",
+    "test_plans": "Test plans"
   }
 }

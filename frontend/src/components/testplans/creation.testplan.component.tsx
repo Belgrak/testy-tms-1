@@ -441,7 +441,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                     />) :
                                     (<CheckboxTree nodes={[{
                                         value: 'no',
-                                        label: 'Без параметров (необходимо создать параметр)',
+                                        label: t("create_plan.no_parameters_need_parameters") ?? "",
                                         disabled: true,
                                         showCheckbox: false,
                                         icon: <BlockIcon fontSize={"small"} className={classes.icons}/>
@@ -487,7 +487,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                         }}/>) :
                                     (<CheckboxTree nodes={[{
                                         value: 'no_tests',
-                                        label: 'Без тестов (необходимо создать тест-кейс)',
+                                        label: t("create_plan.without_tests"),
                                         disabled: true,
                                         showCheckbox: false,
                                         icon: <BlockIcon fontSize={"small"} className={classes.icons}/>

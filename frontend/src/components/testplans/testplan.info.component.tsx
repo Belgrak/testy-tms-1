@@ -78,7 +78,7 @@ const TestplanInfo: React.FC<Props> = ({
                 {/*</div>}*/}
                 {/*<div style={{display: 'flex', flexDirection: 'row'}}>*/}
                     <Typography style={{marginRight: "1%"}}>
-                        {"Описание:"}
+                        {t("test_info.description")}
                     </Typography>
                     <MDEditor.Markdown source={currentTestPlan.description} style={{whiteSpace: 'pre-wrap', maxWidth: "90%"}}/>
                 {/*TODO ширина*/}

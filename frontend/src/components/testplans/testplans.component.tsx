@@ -128,7 +128,7 @@ const TestplansComponent: React.FC = () => {
                     plan = parent.parent
                 }
             }
-            newBreadcrumbs.push({name: "Тест-планы", link: ""})
+            newBreadcrumbs.push({name: t("testplans.test_plans"), link: ""})
             setBreadcrumbs(newBreadcrumbs.reverse())
             setFlag(false)
         }

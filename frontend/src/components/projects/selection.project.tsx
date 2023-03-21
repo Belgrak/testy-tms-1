@@ -14,6 +14,7 @@ import {project} from "../models.interfaces";
 import DeletionDialogProject from "./deletion.dialog.project.component";
 import localStorageTMS from "../../services/localStorageTMS";
 import {useNavigate} from "react-router-dom";
+import {useTranslation} from "react-i18next";
 
 const SelectionProject: React.FC = () => {
     const {t} = useTranslation();
