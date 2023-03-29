@@ -1,6 +1,6 @@
 import React, {ChangeEvent, useEffect, useMemo, useState} from 'react';
 import {DesktopDatePicker, LocalizationProvider} from "@mui/x-date-pickers";
-import moment, {Moment} from "moment";
+import {Moment} from "moment";
 import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
 import {test, testPlan, testResult, user} from "../models.interfaces";
 import ProjectService from "../../services/project.service";
@@ -27,13 +27,13 @@ import TableHead from "@mui/material/TableHead";
 import LineChartComponent from "./charts/line.chart.component";
 import PieChartComponent from "./charts/pie.chart.component";
 import {useNavigate} from "react-router-dom";
-import {useSelector} from "react-redux";
-import {RootState} from "../../app/store";
 import {useTranslation} from "react-i18next";
 import localStorageTMS from "../../services/localStorageTMS";
+import {MomentTMS} from "../../services/momentTMS";
 
 const Project: React.FC = () => {
     const {t} = useTranslation();
+    const momentTMS = MomentTMS.initWithFormat;
     const classes = useStyles();
     const navigate = useNavigate();
     const labels = useMemo(() => [['ID', '#000000'], [t("project.plan_title"), '#000000'], [t("project.count"), '#000000']]
@@ -47,8 +47,8 @@ const Project: React.FC = () => {
 
     const [isSwitched, setSwitch] = React.useState(false);
     const [showFilter, setShowFilter] = React.useState(false);
-    const [startDate, setStartDate] = React.useState<Moment | null>(moment("01.01.1970", "DD.MM.YYYY"));
-    const [endDate, setEndDate] = React.useState<Moment | null>(moment());
+    const [startDate, setStartDate] = React.useState<Moment | null>(MomentTMS.init("01.01.1970", "DD.MM.YYYY"));
+    const [endDate, setEndDate] = React.useState<Moment | null>(MomentTMS.init());
     const [showProjectSettings, setShowProjectSettings] = useState(false);
     const [tests, setTests] = useState<test[]>([]);
     const [testPlans, setTestPlans] = useState<testPlan[]>([]);
@@ -87,7 +87,7 @@ const Project: React.FC = () => {
             let editorId: number | null = null;
             const tests_ids = currentTests.map((test) => test.id)
             testResults.sort((a, b) =>
-                moment(b.updated_at, "YYYY-MM-DDThh:mm").valueOf() - moment(a.updated_at, "YYYY-MM-DDThh:mm").valueOf())
+                momentTMS(b.updated_at).valueOf() - momentTMS(a.updated_at).valueOf())
             for (let test_result of testResults) {
                 if (tests_ids.includes(test_result.test)) {
                     editorId = test_result?.user ?? editorId
@@ -108,7 +108,7 @@ const Project: React.FC = () => {
             return toReturn
         })
         result.sort((a, b) =>
-            (moment(b.slice(-2)[0], "YYYY-MM-DDThh:mm").valueOf() - moment(a.slice(-2)[0], "YYYY-MM-DDThh:mm").valueOf()))
+            (momentTMS(b.slice(-2)[0]).valueOf() - momentTMS(a.slice(-2)[0]).valueOf()))
         return result
     }, [testPlans, testResults]);
     const personalTableData = projectTableData.filter((value) => value[value.length - 1] === currentUsername)
@@ -155,7 +155,6 @@ const Project: React.FC = () => {
     }, [])
 
     const charts = [<LineChartComponent tests={tests}/>, <PieChartComponent tests={tests}/>];
-
     const filter = useMemo(() => {
         if (!isLoaded) {
             statuses.forEach((status) => {
@@ -164,7 +163,6 @@ const Project: React.FC = () => {
                 setStatusesToShow(temporaryValue)
             })
         }
-
         return <Grid style={{display: 'flex', justifyContent: 'center', marginBottom: '10px', marginTop: "10px"}}>
             <FormGroup style={{display: 'flex', justifyContent: 'center', flexDirection: 'row'}}>
                 {statuses.map((status, index) =>
@@ -184,7 +182,7 @@ const Project: React.FC = () => {
                         <DesktopDatePicker
                             className={classes.centeredField}
                             label={t("project.input_start_date")}
-                            inputFormat="DD/MM/YYYY"
+                            inputFormat="L"
                             value={startDate}
                             onChange={handleChangeStartDate}
                             renderInput={(params) => <TextField className={classes.centeredField} {...params} />}
@@ -194,7 +192,7 @@ const Project: React.FC = () => {
                         <DesktopDatePicker
                             className={classes.centeredField}
                             label={t("project.input_end_date")}
-                            inputFormat="DD/MM/YYYY"
+                            inputFormat="L"
                             value={endDate}
                             onChange={handleChangeEndDate}
                             renderInput={(params) => <TextField className={classes.centeredField} {...params} />}
@@ -209,14 +207,14 @@ const Project: React.FC = () => {
         {(isSwitched ? personalTableData : projectTableData)?.map(
             (testplanData, planIndex) =>
                 // Checking if last date of test plan is between filter dates
-                (!moment(testplanData[testplanData.length - 2], "YYYY-MM-DDThh:mm")
+                (!momentTMS(testplanData[testplanData.length - 2])
                     .isBetween(startDate, endDate, undefined, "[]")) ? null :
                     (
                         // Returning table row with data
                         <TableRow id={`row-${planIndex}`} key={planIndex} style={{cursor: "pointer"}} hover={true}
                                   onClick={() => navigate("/testplans/" + testplanData[0])}>
                             {testplanData.slice(0, testplanData.length - 2)
-                                .concat([moment(testplanData[testplanData.length - 2], "YYYY-MM-DDThh:mm").format("DD.MM.YYYY"),
+                                .concat([momentTMS(testplanData[testplanData.length - 2]).format('L'),
                                     testplanData[testplanData.length - 1]]).map(
                                     // Filling table cells with data
                                     (value, index) => {

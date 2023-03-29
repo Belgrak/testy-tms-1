@@ -12,7 +12,6 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import CloseIcon from "@mui/icons-material/Close";
-import moment from "moment";
 import useStyles from "./styles.testplans";
 import TestPlanService from "../../services/testplan.service";
 import {defaultStatus, statuses} from "../model.statuses";
@@ -24,6 +23,7 @@ import {useTranslation} from "react-i18next";
 import MDEditor from "@uiw/react-md-editor";
 import {Editor} from "@toast-ui/react-editor";
 import SuiteCaseService from "../../services/suite.case.service";
+import {MomentTMS} from "../../services/momentTMS";
 
 interface Props {
     detailedTestInfo: { show: boolean, test: test };
@@ -39,6 +39,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                                                setShowEnterResult
                                            }) => {
     const {t} = useTranslation();
+    const momentTMS = MomentTMS.initWithFormat;
     const classes = useStyles()
     const [scenario, setScenario] = useState<string>()
     const [description, setDescription] = useState<string>()
@@ -167,7 +168,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                     {t("test_info.created_at")}
                 </Grid>
                 <Grid item>
-                    {moment(test.created_at, 'YYYY-MM-DDTHH:mm').format('DD/MM/YYYY HH:mm')}
+                    {momentTMS(test.created_at).format('L LT')}
                 </Grid>
             </Grid>
             <Grid container spacing={1}>
@@ -363,7 +364,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                                               }}/>
                                     </Grid>
                                     <Grid item>
-                                        {moment(testResult.updated_at, 'YYYY-MM-DDTHH:mm').format('DD/MM/YY HH:mm')}
+                                        {momentTMS(testResult.updated_at).format('L LT')}
                                     </Grid>
                                     <Grid item sx={{fontWeight: 'bold', wordBreak: "break-word"}}>
                                         {names.get(testResult.id) ?? ""}

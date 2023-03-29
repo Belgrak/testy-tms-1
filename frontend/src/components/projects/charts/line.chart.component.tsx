@@ -1,14 +1,15 @@
 import React, {useMemo} from 'react';
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
-import moment from "moment/moment";
 import {test} from "../../models.interfaces";
 import {statuses} from "../../model.statuses";
+import {MomentTMS} from "../../../services/momentTMS";
 
 const LineChartComponent = (props: {
     tests: test[]
 }) => {
+    const momentTMS = MomentTMS.initWithFormat;
     const sliceOfTests = props.tests.slice(0, 100).sort((a, b) =>
-        moment(a.updated_at, "YYYY-MM-DDThh:mm").valueOf() - moment(b.updated_at, "YYYY-MM-DDThh:mm").valueOf())
+        momentTMS(a.updated_at).valueOf() - momentTMS(b.updated_at).valueOf())
     const result: { [key: string]: number; }[] = []
     const dates: string[] = []
 
@@ -17,7 +18,7 @@ const LineChartComponent = (props: {
     const lineData = useMemo(() => {
         // Filling lists with date and results statuses on that date
         sliceOfTests.forEach((test) => {
-            const testDate = moment(test.updated_at, "YYYY-MM-DDThh:mm").format("DD/MM/YYYY")
+            const testDate = momentTMS(test.updated_at).format("L")
             if (dates[dates.length - 1] !== testDate) {
                 const currentResult: { [key: string]: number; } = {}
                 statuses.map((status) => currentResult[status.name.toLowerCase()] = 0)

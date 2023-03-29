@@ -11,7 +11,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
 import {DesktopDatePicker, LocalizationProvider} from "@mui/x-date-pickers";
-import moment, {Moment} from "moment";
+import {Moment} from "moment";
 import TestPlanService from "../../services/testplan.service";
 import CheckboxTree from 'react-checkbox-tree';
 import 'react-checkbox-tree/lib/react-checkbox-tree.css';
@@ -31,6 +31,7 @@ import MDEditor from "@uiw/react-md-editor";
 import '@toast-ui/editor/dist/toastui-editor.css';
 import {Editor, EditorCore, EditorProps} from '@toast-ui/react-editor';
 import localStorageTMS from "../../services/localStorageTMS";
+import {MomentTMS} from "../../services/momentTMS";
 
 interface Props {
     show: boolean;
@@ -59,6 +60,8 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                                         setIsForEdit,
                                                     }) => {
     const {t} = useTranslation();
+    const momentTMS = MomentTMS.init
+    const momentTMSUTC = MomentTMS.initUTC
     const classes = useStyles()
 
     const [selectedTestPlan, setSelectedTestPlan] = useState<{ id: number, name: string } | null>(null)
@@ -68,8 +71,8 @@ const CreationTestplanComponent: React.FC<Props> = ({
     const [description, setDescription] = useState("")
     const editorRef = React.createRef();
 
-    const [startDate, setStartDate] = useState<Moment | null>(isForEdit ? moment.utc(isForEdit.started_at) : moment.utc())
-    const [endDate, setEndDate] = useState<Moment | null>(isForEdit ? moment.utc(isForEdit.due_date) : moment.utc())
+    const [startDate, setStartDate] = useState<Moment | null>(isForEdit ? momentTMSUTC(isForEdit.started_at) : momentTMSUTC())
+    const [endDate, setEndDate] = useState<Moment | null>(isForEdit ? momentTMSUTC(isForEdit.due_date) : momentTMSUTC())
 
     const [params, setParams] = useState<param [] | null>(null)
     const [paramsChecked, setParamsChecked] = useState<Array<string>>([])
@@ -110,8 +113,8 @@ const CreationTestplanComponent: React.FC<Props> = ({
             setParamsChecked(isForEdit.parameters.map(x => String(x)))
         }
         setTestsChecked(isForEdit.tests.map(x => String(x.case)))
-        setStartDate(moment.utc(isForEdit.started_at))
-        setEndDate(moment.utc(isForEdit.due_date))
+        setStartDate(momentTMSUTC(isForEdit.started_at))
+        setEndDate(momentTMSUTC(isForEdit.due_date))
     }, [isForEdit, testPlans])
 
     useEffect(() => {
@@ -139,8 +142,8 @@ const CreationTestplanComponent: React.FC<Props> = ({
         setShow(false)
         setName("")
         setDescription("")
-        setStartDate(isForEdit ? moment.utc(isForEdit.started_at) : moment.utc())
-        setEndDate(isForEdit ? moment.utc(isForEdit.due_date) : moment.utc())
+        setStartDate(isForEdit ? momentTMSUTC(isForEdit.started_at) : momentTMSUTC())
+        setEndDate(isForEdit ? momentTMSUTC(isForEdit.due_date) : momentTMSUTC())
         setParamsChecked([])
         setParamsExpanded([])
         setDisable(false)
@@ -528,8 +531,8 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                 <LocalizationProvider dateAdapter={AdapterMoment}>
                                     <DesktopDatePicker
                                         label={t("create_plan.start_date")}
-                                        inputFormat="DD/MM/YYYY"
-                                        value={startDate}
+                                        inputFormat="L"
+                                        value={momentTMS(startDate)}
                                         onChange={handleStartDate}
                                         className={classes.textFieldTestplansAndTests}
                                         renderInput={(params) => <TextField
@@ -541,8 +544,8 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                 <LocalizationProvider dateAdapter={AdapterMoment}>
                                     <DesktopDatePicker
                                         label={t("create_plan.end_date")}
-                                        inputFormat="DD/MM/YYYY"
-                                        value={endDate}
+                                        inputFormat="L"
+                                        value={momentTMS(endDate)}
                                         onChange={handleEndDate}
                                         className={classes.textFieldTestplansAndTests}
                                         renderInput={(params) => <TextField data-cy="testplan-due-date" {...params} />}

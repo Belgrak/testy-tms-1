@@ -8,8 +8,8 @@
     "repeatHelper": "Enter new password again",
     "success": "Changes saved successfully",
     "check_data": "Current data is incorrect",
-    "current_error": "Current password should be equal with your Enter",
-    "new_error": "New password should be equal with your Enter",
+    "current_error": "Current password should be equal with your input",
+    "new_error": "New password should be equal with your input",
     "username": "Username",
     "first_name": "First name",
     "last_name": "Last name",
@@ -30,7 +30,7 @@
     "login": "Login",
     "password": "Password",
     "submit": "Sign in",
-    "fill_field": "Fill this field"
+    "fill_field": "Fill this field."
   },
   "project_creation": {
     "projects": "Projects",
@@ -101,7 +101,7 @@
   },
   "case_create": {
     "title": "Test case title",
-    "fill_field": "Fill this field",
+    "fill_field": "Fill this field.",
     "input_title": "Enter test case title",
     "scenario": "Scenario",
     "input_scenario": "Enter scenario",
@@ -163,8 +163,8 @@
     "description": "Description",
     "none": "None",
     "input_plan": "Enter test plan",
-    "start_date": "Start date",
-    "end_date": "End date",
+    "start_date": "Start date *",
+    "end_date": "End date *",
     "cancel": "Cancel",
     "submit": "Save",
     "no_parameters_need_parameters": "Without parameters (You should create a parameter)",

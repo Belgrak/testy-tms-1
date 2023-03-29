@@ -9,13 +9,13 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
-import moment from "moment";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import useStyles from "./styles.testplans";
 import {test, testPlan} from "../models.interfaces";
 import EditIcon from "@mui/icons-material/Edit";
 import {useTranslation} from "react-i18next";
 import MDEditor from "@uiw/react-md-editor";
+import {MomentTMS} from "../../services/momentTMS";
 
 interface Props {
     currentTestPlan: testPlan;
@@ -39,6 +39,7 @@ const TestplanInfo: React.FC<Props> = ({
                                            setShowEnterResult
                                        }) => {
     const {t} = useTranslation();
+    const momentTMS = MomentTMS.initWithFormat;
     const classes = useStyles()
 
     return (
@@ -60,10 +61,10 @@ const TestplanInfo: React.FC<Props> = ({
                     </Grid>
                 </Grid>
                 <Typography>
-                    {t("testplans.started_at") + moment.utc(currentTestPlan.started_at, 'YYYY-MM-DDTHH:mm').local().format('MMMM D, YYYY HH:mm')}
+                    {t("testplans.started_at") + momentTMS(currentTestPlan.started_at).format('LLL')}
                 </Typography>
                 <Typography>
-                    {t("testplans.due_date") + moment.utc(currentTestPlan.due_date, 'YYYY-MM-DDTHH:mm').local().format('MMMM D, YYYY HH:mm')}
+                    {t("testplans.due_date") + momentTMS(currentTestPlan.due_date).format('LLL')}
                 </Typography>
                 {/*{currentTestPlan.description &&*/}
                 {/*<div style={{display: 'flex', flexDirection: 'row'}}>*/}
@@ -123,7 +124,7 @@ const TestplanInfo: React.FC<Props> = ({
                                 </TableCell>}
                                 {(!detailedTestInfo || !detailedTestInfo.show) &&
                                 (< TableCell className={classes.tableCellTests}>
-                                    {moment(test.updated_at).format('DD/MM/YYYY')}
+                                    {momentTMS(test.updated_at).format('L')}
                                 </TableCell>)}
                                 {(!detailedTestInfo || !detailedTestInfo.show) &&
                                 (<TableCell className={classes.tableCellTests}>
