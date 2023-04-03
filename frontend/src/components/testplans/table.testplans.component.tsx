@@ -11,10 +11,12 @@ import TestPlanService from "../../services/testplan.service";
 import {planStatistic, testPlan} from "../models.interfaces";
 import useStyles from "./styles.testplans";
 import {useTranslation} from "react-i18next";
+import i18next from "i18next";
 
 const TableTestPlans = (props: {
     testplan: treeTestPlan, selected: number[], setSelected: (data: number[]) => void,
 }) => {
+    const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const classes = useStyles()
     const {testplan, selected, setSelected} = props;
@@ -73,7 +75,7 @@ const TableTestPlans = (props: {
                     <tr>
                         <td className={classes.cellCheckbox}>
                             <FormControlLabel
-                                label={testplan.id}
+                                label={formatter.format(testplan.id)}
                                 control={<Checkbox
                                     sx={{height: 20}}
                                     checked={selected.indexOf(testplan.id) !== -1}
@@ -93,7 +95,7 @@ const TableTestPlans = (props: {
 
                             </div>
                             <div>
-                                {t("testplans.count_child") + testplan.children.length + t("testplans.count_tests") + testNumber}
+                                {t("testplans.count_child") + formatter.format(testplan.children.length) + t("testplans.count_tests") + formatter.format(testNumber ?? 0)}
                             </div>
                         </td>
 

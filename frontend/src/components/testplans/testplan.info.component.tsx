@@ -16,6 +16,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import {useTranslation} from "react-i18next";
 import MDEditor from "@uiw/react-md-editor";
 import {MomentTMS} from "../../services/momentTMS";
+import i18next from "i18next";
 
 interface Props {
     currentTestPlan: testPlan;
@@ -38,6 +39,7 @@ const TestplanInfo: React.FC<Props> = ({
                                            showEnterResult,
                                            setShowEnterResult
                                        }) => {
+    const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const momentTMS = MomentTMS.initWithFormat;
     const classes = useStyles()
@@ -95,7 +97,7 @@ const TestplanInfo: React.FC<Props> = ({
                                         className={classes.checkboxTests}
                                         label={
                                             <Typography sx={{fontSize: 15}}>
-                                                {test.id}
+                                                {formatter.format(test.id)}
                                             </Typography>}
                                         control={<Checkbox sx={{height: 10}} color="primary"/>}
                                     />

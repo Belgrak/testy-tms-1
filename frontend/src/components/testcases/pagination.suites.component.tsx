@@ -5,6 +5,7 @@ import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import useStylesTestCases from "./styles.testcases"
 import {useTranslation} from "react-i18next";
+import i18next from "i18next";
 
 interface Props {
     treeSuites: treeSuite[],
@@ -12,6 +13,7 @@ interface Props {
 }
 
 const PaginationSuitesComponent: React.FC<Props> = ({treeSuites, countOfSuitesOnPage}) => {
+    const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const [page, setPage] = useState(1);
     const classes = useStylesTestCases()
@@ -46,7 +48,7 @@ const PaginationSuitesComponent: React.FC<Props> = ({treeSuites, countOfSuitesOn
                             <Link className={classes.linkSuite} to={`${suite.id}`}>
                                 {suite.name}
                             </Link>
-                            <div className={classes.numOfSuitesCases}>{t("suites.child_suites")} {suite.descendant_count}</div>
+                            <div className={classes.numOfSuitesCases}>{t("suites.child_suites")} {formatter.format(suite.descendant_count)}</div>
                         </div>
                     ))}
             </div>

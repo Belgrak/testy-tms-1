@@ -7,6 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import i18next from "i18next";
 
 function RowCase(props: {
     row: treeSuite, setShowCreationCase: (show: boolean) => void,
@@ -20,6 +21,7 @@ function RowCase(props: {
     setComponentForDeletion: (component: myCase | treeSuite) => void,
     classesTableSuitesCases: any
 }) {
+    const formatter = new Intl.NumberFormat(i18next.language)
     const {
         row,
         setShowCreationCase,
@@ -67,7 +69,7 @@ function RowCase(props: {
             <TableCell component="th"
                        scope="row"
                        padding="none">
-                {onecase.id}
+                {formatter.format(onecase.id)}
             </TableCell>
             <TableCell className={classesTableSuitesCases.caseNameCell}>
                 {onecase.name}

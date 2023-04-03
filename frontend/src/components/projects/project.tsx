@@ -30,9 +30,11 @@ import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import localStorageTMS from "../../services/localStorageTMS";
 import {MomentTMS} from "../../services/momentTMS";
+import i18next from "i18next";
 
 const Project: React.FC = () => {
     const {t} = useTranslation();
+    const formatter = new Intl.NumberFormat(i18next.language)
     const momentTMS = MomentTMS.initWithFormat;
     const classes = useStyles();
     const navigate = useNavigate();
@@ -102,8 +104,8 @@ const Project: React.FC = () => {
                 users.find((value) => value.id === editorId) : null
             const editorName = (editor != null) ? editor.username : t("project.not_assigned")
 
-            const toReturn = [value.id, value.name, results.all]
-            statuses.map((status) => toReturn.push(results[status.name.toLowerCase()]))
+            const toReturn = [formatter.format(value.id), value.name, formatter.format(results.all)]
+            statuses.map((status) => toReturn.push(formatter.format(results[status.name.toLowerCase()])))
             toReturn.push(date, editorName)
             return toReturn
         })

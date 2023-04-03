@@ -20,6 +20,7 @@ import useStylesGlobal from "../../styles/styles";
 import {myCase} from "../models.interfaces";
 import {useTranslation} from "react-i18next";
 import localStorageTMS from "../../services/localStorageTMS";
+import i18next from "i18next";
 
 
 export const CustomWidthTooltip = styled(({className, ...props}: TooltipProps) => (
@@ -73,6 +74,7 @@ export interface mainFieldInSuite {
 
 
 const SuitesComponent = () => {
+    const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const classes = useStyles()
     const [showCreationCase, setShowCreationCase] = useState(false)
@@ -236,7 +238,7 @@ const SuitesComponent = () => {
                             >
                                 {Array.from({length: (stop - start) / step + 1}, (_, i) => start + i * step).map((num, index) =>
                                     <MenuItem key={index}
-                                              value={num}>{num}</MenuItem>)}
+                                              value={num}>{formatter.format(num)}</MenuItem>)}
                             </Select>
                         </FormControl>
                     </div>}

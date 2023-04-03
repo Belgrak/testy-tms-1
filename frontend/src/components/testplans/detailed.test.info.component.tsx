@@ -24,6 +24,7 @@ import MDEditor from "@uiw/react-md-editor";
 import {Editor} from "@toast-ui/react-editor";
 import SuiteCaseService from "../../services/suite.case.service";
 import {MomentTMS} from "../../services/momentTMS";
+import i18next from "i18next";
 
 interface Props {
     detailedTestInfo: { show: boolean, test: test };
@@ -38,6 +39,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                                                showEnterResult,
                                                setShowEnterResult
                                            }) => {
+    const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const momentTMS = MomentTMS.initWithFormat;
     const classes = useStyles()
@@ -150,7 +152,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                 <Grid container spacing={3}>
                     <Grid item>
                         <Typography variant="h5">
-                            {test.id}
+                            {formatter.format(test.id)}
                         </Typography>
                     </Grid>
                     <Grid item>
