@@ -322,7 +322,7 @@ const Project: React.FC = () => {
                                         {labels.map(([value, color], index) => {
                                             if (!statuses.find((status) => status.name.toLowerCase() === value.toLowerCase())) {
                                                 return <TableCell key={index}>
-                                                    <Typography color={color} fontWeight={'bolder'}
+                                                    <Typography fontWeight={'bolder'}
                                                                 align={'center'}>{value}</Typography>
                                                 </TableCell>
                                             }
