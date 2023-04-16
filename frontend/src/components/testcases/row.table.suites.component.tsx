@@ -13,6 +13,7 @@ import TableCell from "@mui/material/TableCell";
 import Link from "@mui/material/Link";
 import RowCase from "./row.case.table.suites.component";
 import {useTranslation} from "react-i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 function Row(props: {
     row: treeSuite, setShowCreationCase: (show: boolean) => void, setShowCreationSuite: (show: boolean) => void,
@@ -24,6 +25,7 @@ function Row(props: {
     setComponentForDeletion: (component: myCase | treeSuite) => void,
     classesTableSuitesCases: any, setInfoSuiteForEdit: (suite: mainFieldInSuite) => void,
 }) {
+    const [, theme] = useMode();
     const {t} = useTranslation();
     const {
         row,
@@ -90,7 +92,8 @@ function Row(props: {
                 <td className={classesTableSuitesCases.cellSuiteChip} colSpan={4}>
                     <div className={classesTableSuitesCases.suiteNameGrid}
                          id={row.id.toString()}>
-                        <div className={classesTableSuitesCases.suiteChip} onClick={setOpenClose}>
+                        <div className={classesTableSuitesCases.suiteChip}
+                             style={{backgroundColor: theme.palette.rightDialogPart, border: "0.5px solid"}} onClick={setOpenClose}>
                             <KeyboardArrowUpIcon sx={{
                                 transform: localOpen ? 'rotate(0deg)' : 'rotate(180deg)',
                                 transition: '0.2s', marginRight: 0.6
@@ -136,7 +139,8 @@ function Row(props: {
                         in={(treeSuitesOpenMap.get(row.id) === undefined || treeSuitesOpenMap.get(row.id) === true)}
                         mountOnEnter>
                         <Table size="small">
-                            <tbody className={classesTableSuitesCases.headerTableBodyCases}>
+                            <tbody className={classesTableSuitesCases.headerTableBodyCases}
+                                   style={{backgroundColor: theme.palette.rightDialogPart}}>
                             <tr>
                                 <td className={classesTableSuitesCases.cellForCheckBoxAndId}>
                                     <Checkbox

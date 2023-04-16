@@ -17,6 +17,7 @@ import {useTranslation} from "react-i18next";
 import MDEditor from "@uiw/react-md-editor";
 import {MomentTMS} from "../../services/momentTMS";
 import i18next from "i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 interface Props {
     currentTestPlan: testPlan;
@@ -39,6 +40,7 @@ const TestplanInfo: React.FC<Props> = ({
                                            showEnterResult,
                                            setShowEnterResult
                                        }) => {
+    const [, theme] = useMode();
     const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const momentTMS = MomentTMS.initWithFormat;
@@ -119,7 +121,7 @@ const TestplanInfo: React.FC<Props> = ({
                                           style={{
                                               margin: 3,
                                               maxWidth: "95%",
-                                              backgroundColor: test.last_status_color.color,
+                                              backgroundColor: theme.palette[test.last_status_color.name.toLowerCase()],
                                               color: "white"
                                           }}/>
 

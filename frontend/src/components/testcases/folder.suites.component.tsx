@@ -12,6 +12,7 @@ import clsx from 'clsx';
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import {useTranslation} from "react-i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 function MinusSquare() {
     return (
@@ -153,6 +154,7 @@ const Suite = (props: {
 const FolderSuites = (props: {
     selectedSuiteForTreeView: treeSuite | undefined
 }) => {
+    const [, theme] = useMode();
     const {t} = useTranslation();
     const {selectedSuiteForTreeView} = props;
     const [expanded, setExpanded] = useState<string[]>([])
@@ -341,7 +343,7 @@ const FolderSuites = (props: {
                     </div>}
                 </div>
                 <div style={{
-                    backgroundColor: "white", borderRadius: 10, margin: "13px 13px 13px 13px ",
+                    backgroundColor: theme.palette.background.paper, borderRadius: 10, margin: "13px 13px 13px 13px ",
                     height: "100%", overflowY: "auto", overflowX: "auto"
                 }}>
                     <TreeView

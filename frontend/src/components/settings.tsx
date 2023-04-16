@@ -1,7 +1,5 @@
 import React, {useState} from "react";
 import {ThemeProvider} from '@mui/material/styles';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
 import IconButton from "@mui/material/IconButton";
 import {SelectChangeEvent} from "@mui/material/Select";
 import Typography from "@mui/material/Typography";
@@ -11,9 +9,11 @@ import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import {useTranslation} from "react-i18next";
 import i18next from "i18next";
-import Box from "@mui/material/Box";
 import {CssBaseline} from "@mui/material";
 import {useMode} from "../context/ColorModeContextProvider";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import Tooltip from "@mui/material/Tooltip";
 
 const ColorModeContext = React.createContext({
     toggleColorMode: () => {
@@ -24,13 +24,18 @@ const Settings: React.FC = () => {
     const {t, i18n} = useTranslation();
 
     const [colorMode, theme] = useMode();
+    const changeMode = () => {
+        colorMode.toggleColorMode();
+        console.log(theme.palette.mode)
+        localStorage.setItem("mode", (theme.palette.mode == "dark") ? "light" : "dark");
+        window.location.reload();
+    }
 
     const [language, setLanguage] = useState(i18next.language || "ru")
 
-    const handleOnChangeLanguage = (event: SelectChangeEvent<string>) => setLanguage(event.target.value)
+    const handleOnChangeLanguage = (event: SelectChangeEvent) => setLanguage(event.target.value)
     const handleOnSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         i18n.changeLanguage(language).catch((e) => console.log(e));
-        console.log(theme.palette.mode);
         localStorage.setItem("mode", (theme.palette.mode != "dark") ? "light" : "dark");
     }
 
@@ -44,10 +49,14 @@ const Settings: React.FC = () => {
                     flexDirection: 'column',
                     justifyContent: 'center',
                     margin: 1,
-                    minWidth: 200,
-                    backgroundColor: theme.palette.background.default
+                    minWidth: 200
                 }}
                 onSubmit={handleOnSubmit}>
+                <Tooltip title={(theme.palette.mode == "dark" ? "Light" : "Dark") + " mode"}>
+                    <IconButton sx={{ml: 1}} onClick={changeMode} color="inherit">
+                        {theme.palette.mode === 'dark' ? <LightModeIcon/> : <DarkModeIcon/>}
+                    </IconButton>
+                </Tooltip>
                 <InputLabel>{t("settings.lang")}</InputLabel>
                 <Select
                     autoWidth
@@ -60,23 +69,6 @@ const Settings: React.FC = () => {
                 </Select>
                 <Button type={"submit"} variant={"contained"}
                         sx={{margin: '10px 10px 10px 10px'}}>{t("settings.save")}</Button>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        width: '100%',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: 'background.default',
-                        color: 'text.primary',
-                        borderRadius: 1,
-                        p: 3,
-                    }}
-                >
-                    {theme.palette.mode} mode
-                    <IconButton sx={{ml: 1}} onClick={colorMode.toggleColorMode} color="inherit">
-                        {theme.palette.mode === 'dark' ? <Brightness7Icon/> : <Brightness4Icon/>}
-                    </IconButton>
-                </Box>
             </form>
         </ThemeProvider>
     </ColorModeContext.Provider>

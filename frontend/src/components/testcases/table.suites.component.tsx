@@ -14,6 +14,7 @@ import useStylesTestCases from "./styles.testcases"
 import SuiteCaseService from "../../services/suite.case.service";
 import Row from "./row.table.suites.component";
 import {useTranslation} from "react-i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 const TableSuites = (props: {
     selected: readonly string[], setSelected: (array: readonly string[]) => void,
@@ -27,6 +28,7 @@ const TableSuites = (props: {
     selectedSuiteForTreeView: treeSuite,
     setSelectedSuiteForTreeView: (suite: treeSuite) => void,
 }) => {
+    const [, theme] = useMode();
     const {t} = useTranslation();
     const {
         setShowCreationCase,
@@ -130,7 +132,7 @@ const TableSuites = (props: {
                         secondaryMinSize={35}
                         percentage>
             <div>
-                <Box className={classesTableSuitesCases.box}>
+                <Box className={classesTableSuitesCases.box} style={{backgroundColor: theme.palette.rightDialogPart}}>
                     <div
                         style={{marginLeft: 10, marginTop: 5}}
                     >

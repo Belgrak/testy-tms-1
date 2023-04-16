@@ -17,6 +17,7 @@ import AttachmentButton from "../attachment/attachment_button";
 import AttachmentService from "../../services/attachment.servise";
 import {useTranslation} from "react-i18next";
 import localStorageTMS from "../../services/localStorageTMS";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 interface Props {
     show: boolean;
@@ -44,6 +45,7 @@ const CreationCase: React.FC<Props> = ({
                                            setSelectedSuiteForTreeView,
                                            selectedSuiteForTreeView
                                        }) => {
+    const [, theme] = useMode();
     const {t} = useTranslation();
     const classes = useStyles()
     const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string }>({
@@ -238,6 +240,9 @@ const CreationCase: React.FC<Props> = ({
             open={show}
             onClose={handleClose}
             classes={{paper: classes.paperCreationTestCase}}
+            sx={{ "& .MuiDialog-paper": {
+                    border: "1px solid #666666",
+                }}}
         >
             <Grid container style={{
                 position: "absolute",
@@ -356,7 +361,7 @@ const CreationCase: React.FC<Props> = ({
                     </Grid>
                 </Grid>
                 <Grid xs={3} item style={{
-                    backgroundColor: "#eeeeee", paddingTop: 26, display: "flex",
+                    backgroundColor: theme.palette.rightDialogPart, paddingTop: 26, display: "flex",
                     flexDirection: "column", justifyContent: "space-between"
                 }}>
                     <Grid style={{marginLeft: 15}}>
@@ -412,8 +417,8 @@ const CreationCase: React.FC<Props> = ({
                                 width: "45%",
                                 minWidth: 100,
                                 height: "45%",
-                                backgroundColor: "#FFFFFF",
-                                color: "#000000",
+                                backgroundColor: theme.palette.lightButton,
+                                color: theme.palette.text.primary,
                             }}
                             >
                                 {t("case_create.cancel")}
@@ -426,8 +431,8 @@ const CreationCase: React.FC<Props> = ({
                                     width: "45%",
                                     minWidth: 100,
                                     height: "45%",
-                                    backgroundColor: "#696969",
-                                    color: "#FFFFFF",
+                                    backgroundColor: theme.palette.darkGreyButton,
+                                    color: "white",
                                 }}
                             >
                                 {t("case_create.submit")}

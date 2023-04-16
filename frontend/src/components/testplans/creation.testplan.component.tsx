@@ -32,6 +32,8 @@ import '@toast-ui/editor/dist/toastui-editor.css';
 import {Editor, EditorCore, EditorProps} from '@toast-ui/react-editor';
 import localStorageTMS from "../../services/localStorageTMS";
 import {MomentTMS} from "../../services/momentTMS";
+import {useMode} from "../../context/ColorModeContextProvider";
+import i18next from "i18next";
 
 interface Props {
     show: boolean;
@@ -59,6 +61,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                                         isForEdit,
                                                         setIsForEdit,
                                                     }) => {
+    const [, theme] = useMode();
     const {t} = useTranslation();
     const momentTMS = MomentTMS.init
     const momentTMSUTC = MomentTMS.initUTC
@@ -334,6 +337,9 @@ const CreationTestplanComponent: React.FC<Props> = ({
             open={show}
             onClose={handleClose}
             classes={{paper: classes.paperCreation}}
+            sx={{ "& .MuiDialog-paper": {
+                    border: "1px solid #666666",
+                }}}
         >
             <form className={classes.formTestPlan}
                   onSubmit={createTestPlan}
@@ -384,6 +390,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                 {/*Docs: https://github.com/nhn/tui.editor/blob/master/docs/en/extended-autolinks.md#customizing-the-extended-autolinks*/}
                                 {/*<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css"/>*/}
                                 <Editor
+                                    language={i18next.language}
                                     ref={editorRef}
                                     initialValue={description}
                                     height="200px"
@@ -502,7 +509,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                     </Grid>
 
                     <Grid xs={3} item style={{
-                        backgroundColor: "#eeeeee", paddingTop: 26, display: "flex",
+                        backgroundColor: theme.palette.rightDialogPart, paddingTop: 26, display: "flex",
                         flexDirection: "column", justifyContent: "space-between"
                     }}>
                         <Grid style={{marginLeft: 15}}>
@@ -563,8 +570,8 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                         minWidth: 100,
                                         width: "40%",
                                         height: "45%",
-                                        backgroundColor: "#FFFFFF",
-                                        color: "#000000",
+                                        backgroundColor: theme.palette.lightButton,
+                                        color: theme.palette.text.primary,
                                     }}
                                 >
                                     {t("create_plan.cancel")}
@@ -577,8 +584,8 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                         minWidth: 100,
                                         width: "40%",
                                         height: "45%",
-                                        backgroundColor: "#696969",
-                                        color: "#FFFFFF",
+                                        backgroundColor: theme.palette.darkGreyButton,
+                                        color: "white",
                                     }}
                                 >
                                     {t("create_plan.submit")}

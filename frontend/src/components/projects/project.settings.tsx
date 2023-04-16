@@ -13,6 +13,7 @@ import Grid from "@mui/material/Grid";
 import {useTranslation} from "react-i18next";
 import localStorageTMS from "../../services/localStorageTMS";
 import {project} from "../models.interfaces";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 interface Props {
     show: boolean;
@@ -29,6 +30,7 @@ interface Node {
 }
 
 const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
+    const [, theme] = useMode();
     const {t} = useTranslation();
     const classes = useStyles()
 
@@ -346,7 +348,7 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                     </div>
                 </Grid>
                 <Grid xs={3} item style={{
-                    backgroundColor: "#eeeeee", paddingTop: 26, display: "flex",
+                    backgroundColor: theme.palette.rightDialogPart, paddingTop: 26, display: "flex",
                     flexDirection: "column", justifyContent: "space-between"
                 }}>
                     <div style={{marginLeft: 15}}>
@@ -406,8 +408,8 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 minWidth: 100,
                                 width: "40%",
                                 height: "45%",
-                                backgroundColor: "#FFFFFF",
-                                color: "#000000",
+                                backgroundColor: theme.palette.lightButton,
+                                color: theme.palette.text.primary,
                             }}
                             >
                                 {t("project_settings.cancel")}
@@ -418,8 +420,8 @@ const ProjectSettings: React.FC<Props> = ({show, setShow}) => {
                                 minWidth: 100,
                                 width: "40%",
                                 height: "45%",
-                                backgroundColor: "#696969",
-                                color: "#FFFFFF",
+                                backgroundColor: theme.palette.darkGreyButton,
+                                color: "white",
                             }}
                             >
                                 {t("project_settings.submit")}

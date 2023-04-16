@@ -25,6 +25,7 @@ import {Editor} from "@toast-ui/react-editor";
 import SuiteCaseService from "../../services/suite.case.service";
 import {MomentTMS} from "../../services/momentTMS";
 import i18next from "i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 interface Props {
     detailedTestInfo: { show: boolean, test: test };
@@ -39,6 +40,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                                                showEnterResult,
                                                setShowEnterResult
                                            }) => {
+    const [, theme] = useMode();
     const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const momentTMS = MomentTMS.initWithFormat;
@@ -248,7 +250,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                               sx={{
                                   margin: "3px",
                                   maxWidth: "95%",
-                                  backgroundColor: test.last_status_color.color,
+                                  backgroundColor: theme.palette[test.last_status_color.name.toLowerCase()],
                                   color: "white"
                               }}/>
                     </Grid>}
@@ -321,8 +323,8 @@ const DetailedTestInfo: React.FC<Props> = ({
                     borderColor: "#000000",
                     minWidth: "20%",
                     height: "33%",
-                    backgroundColor: "#696969",
-                    color: "#FFFFFF",
+                    backgroundColor: theme.palette.darkGreyButton,
+                    color: "white",
                     "&:hover": {
                         backgroundColor: "#939393",
                         borderColor: "#000000",
@@ -334,11 +336,11 @@ const DetailedTestInfo: React.FC<Props> = ({
                     borderColor: "#000000",
                     minWidth: "20%",
                     height: "33%",
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: theme.palette.lightButton,
+                    color: theme.palette.text.primary,
                     marginLeft: "3%",
-                    color: "#000000",
                     "&:hover": {
-                        backgroundColor: "#eeeeee",
+                        backgroundColor: "#939393",
                         borderColor: "#000000",
                     }
                 }} onClick={() => setShowEnterResult(false)}>
@@ -361,7 +363,7 @@ const DetailedTestInfo: React.FC<Props> = ({
                                               sx={{
                                                   margin: "3px",
                                                   maxWidth: "95%",
-                                                  backgroundColor: testResult.status_color.color,
+                                                  backgroundColor: theme.palette[test.last_status_color.name.toLowerCase()],
                                                   color: "white"
                                               }}/>
                                     </Grid>

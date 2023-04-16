@@ -14,6 +14,7 @@ import {CustomWidthTooltip, mainFieldInSuite, treeSuite} from "./suites.componen
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import {useTranslation} from "react-i18next";
 import localStorageTMS from "../../services/localStorageTMS";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 
 interface Props {
@@ -39,6 +40,7 @@ const CreationSuite: React.FC<Props> = ({
                                             setInfoSuiteForEdit,
                                             treeSuites
                                         }) => {
+    const [, theme] = useMode();
     const {t} = useTranslation();
     const classes = useStyles()
     const [selectedSuite, setSelectedSuite] = useState<{ id: number; name: string } | null>(selectedSuiteCome)
@@ -172,6 +174,9 @@ const CreationSuite: React.FC<Props> = ({
             open={show}
             onClose={handleClose}
             classes={{paper: classes.paperCreationSuite}}
+            sx={{ "& .MuiDialog-paper": {
+                    border: "1px solid #666666",
+                }}}
         >
             <Grid
                 style={{
@@ -230,7 +235,7 @@ const CreationSuite: React.FC<Props> = ({
                         </Grid>
                     </Grid>
                     <Grid xs={3} item style={{
-                        backgroundColor: "#eeeeee", paddingTop: 26, display: "flex",
+                        backgroundColor: theme.palette.rightDialogPart, paddingTop: 26, display: "flex",
                         flexDirection: "column", justifyContent: "space-between"
                     }}>
                         <Grid style={{marginLeft: 15}}>
@@ -266,8 +271,8 @@ const CreationSuite: React.FC<Props> = ({
                                     width: "45%",
                                     minWidth: 100,
                                     height: "45%",
-                                    backgroundColor: "#FFFFFF",
-                                    color: "#000000",
+                                    backgroundColor: theme.palette.lightButton,
+                                    color: theme.palette.text.primary,
                                 }}
                                 >
                                     {t("suites.cancel")}
@@ -280,8 +285,8 @@ const CreationSuite: React.FC<Props> = ({
                                         width: "45%",
                                         minWidth: 100,
                                         height: "45%",
-                                        backgroundColor: "#696969",
-                                        color: "#FFFFFF",
+                                        backgroundColor: theme.palette.darkGreyButton,
+                                        color: "white",
                                     }}
                                 >
                                     {t("suites.submit")}

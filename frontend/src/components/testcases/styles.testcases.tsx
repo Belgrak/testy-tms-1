@@ -52,7 +52,6 @@ export default makeStyles({
             "& div[id=gridEditDelete]": {
                 visibility: "visible",
             },
-            backgroundColor: "#eeeeee",
         },
     },
     gridEditDelete: {

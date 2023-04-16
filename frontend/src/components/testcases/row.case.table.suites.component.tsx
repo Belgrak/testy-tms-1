@@ -8,6 +8,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import i18next from "i18next";
+import TableRow from "@mui/material/TableRow";
 
 function RowCase(props: {
     row: treeSuite, setShowCreationCase: (show: boolean) => void,
@@ -55,9 +56,7 @@ function RowCase(props: {
     };
 
     return (
-        <tr
-            className={classesTableSuitesCases.tableRow}
-        >
+        <TableRow className={classesTableSuitesCases.tableRow} hover={true}>
             <td className={classesTableSuitesCases.cellForCheckBoxAndId}>
                 <Checkbox
                     className={classesTableSuitesCases.checkBox}
@@ -101,7 +100,7 @@ function RowCase(props: {
                     </IconButton>
                 </div>
             </td>
-        </tr>)
+        </TableRow>)
 }
 
 export default RowCase

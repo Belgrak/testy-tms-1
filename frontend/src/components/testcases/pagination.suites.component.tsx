@@ -6,6 +6,7 @@ import {Link} from "react-router-dom";
 import useStylesTestCases from "./styles.testcases"
 import {useTranslation} from "react-i18next";
 import i18next from "i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 interface Props {
     treeSuites: treeSuite[],
@@ -13,6 +14,7 @@ interface Props {
 }
 
 const PaginationSuitesComponent: React.FC<Props> = ({treeSuites, countOfSuitesOnPage}) => {
+    const [, theme] = useMode();
     const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const [page, setPage] = useState(1);
@@ -44,11 +46,11 @@ const PaginationSuitesComponent: React.FC<Props> = ({treeSuites, countOfSuitesOn
                 {foundSuites.slice(page * countOfSuitesOnPage - countOfSuitesOnPage,
                     page * countOfSuitesOnPage)
                     .map((suite) => (
-                        <div key={suite.id} className={classes.suitePaper}>
-                            <Link className={classes.linkSuite} to={`${suite.id}`}>
+                        <div key={suite.id} className={classes.suitePaper} style={{backgroundColor: theme.palette.rightDialogPart, border: '1px solid #666666'}}>
+                            <Link className={classes.linkSuite} style={{color: theme.palette.text.primary}} to={`${suite.id}`}>
                                 {suite.name}
                             </Link>
-                            <div className={classes.numOfSuitesCases}>{t("suites.child_suites")} {formatter.format(suite.descendant_count)}</div>
+                            <div className={classes.numOfSuitesCases} style={{color: theme.palette.text.primary}}>{t("suites.child_suites")} {formatter.format(suite.descendant_count)}</div>
                         </div>
                     ))}
             </div>

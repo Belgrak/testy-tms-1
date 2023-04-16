@@ -31,9 +31,11 @@ import {useTranslation} from "react-i18next";
 import localStorageTMS from "../../services/localStorageTMS";
 import {MomentTMS} from "../../services/momentTMS";
 import i18next from "i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 const Project: React.FC = () => {
     const {t} = useTranslation();
+    const [, theme] = useMode();
     const formatter = new Intl.NumberFormat(i18next.language)
     const momentTMS = MomentTMS.initWithFormat;
     const classes = useStyles();
@@ -175,7 +177,7 @@ const Project: React.FC = () => {
                                                    style={{
                                                        margin: 3,
                                                        maxWidth: "95%",
-                                                       backgroundColor: status.color,
+                                                       backgroundColor: theme.palette[status.name.toLowerCase()],
                                                        color: "white"
                                                    }}/>}/>
                 )}
@@ -305,11 +307,11 @@ const Project: React.FC = () => {
                                 }
                             </Stack>
                             <Button variant="contained"
-                                    style={{marginLeft: '10px', backgroundColor: "#696969"}}
+                                    style={{marginLeft: '10px', backgroundColor: theme.palette.greyButton, color: "white"}}
                                     onClick={handleOnOpenFilter}>{t("project.filter")}</Button>
                             <Button data-cy="openProjectSettingsPage"
                                     variant="contained"
-                                    style={{marginLeft: '10px', backgroundColor: "#696969"}}
+                                    style={{marginLeft: '10px', backgroundColor: theme.palette.greyButton, color: "white"}}
                                     onClick={handleShowProjectSettings}
                             >{t("project.settings")}</Button>
                         </Stack>
@@ -333,7 +335,7 @@ const Project: React.FC = () => {
                                                               style={{
                                                                   margin: 3,
                                                                   maxWidth: "95%",
-                                                                  backgroundColor: statuses[index - minStatusIndex].color,
+                                                                  backgroundColor: theme.palette[statuses[index - minStatusIndex].name.toLowerCase()],
                                                                   color: "white"
                                                               }}/>
                                                     </div>

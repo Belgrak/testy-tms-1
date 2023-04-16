@@ -7,6 +7,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import {project} from "../models.interfaces";
 import ProjectService from "../../services/project.service";
 import {useTranslation} from "react-i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 interface Props {
     openDialogDeletion: boolean;
@@ -22,6 +23,7 @@ const DeletionDialogProject: React.FC<Props> = ({
                                                     setProjects
                                                 }) => {
     const {t} = useTranslation();
+    const [, theme] = useMode();
     const disagreeToDelete = () => setOpenDialogDeletion(false)
 
     const agreeToDelete = () => {
@@ -43,7 +45,7 @@ const DeletionDialogProject: React.FC<Props> = ({
             onClose={disagreeToDelete}
         >
             <DialogContent>
-                <DialogContentText sx={{fontSize: 20, color: "black"}}>
+                <DialogContentText sx={{fontSize: 20, color: theme.palette.text.primary}}>
                     {t("project_delete.warning")}
                     {selectedForDeletion ?
                     <em> {selectedForDeletion.name}</em> : ""}?
@@ -56,9 +58,9 @@ const DeletionDialogProject: React.FC<Props> = ({
                             width: "30%",
                             minWidth: "100px",
                             height: "30%",
-                            backgroundColor: "#FFFFFF",
+                            backgroundColor: theme.palette.lightButton,
                             border: '1px solid',
-                            color: "#000000",
+                            color: theme.palette.text.primary,
                         }}
                         onClick={disagreeToDelete}
                         title={"Нет"}>
@@ -70,8 +72,8 @@ const DeletionDialogProject: React.FC<Props> = ({
                             width: "30%",
                             minWidth: "100px",
                             height: "30%",
-                            backgroundColor: "#696969",
-                            color: "#FFFFFF",
+                            backgroundColor: theme.palette.darkGreyButton,
+                            color: "white",
                         }}
                         onClick={agreeToDelete}
                         title={"Да"}>

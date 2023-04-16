@@ -12,10 +12,12 @@ import {planStatistic, testPlan} from "../models.interfaces";
 import useStyles from "./styles.testplans";
 import {useTranslation} from "react-i18next";
 import i18next from "i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 const TableTestPlans = (props: {
     testplan: treeTestPlan, selected: number[], setSelected: (data: number[]) => void,
 }) => {
+    const [, theme] = useMode();
     const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const classes = useStyles()
@@ -87,7 +89,7 @@ const TableTestPlans = (props: {
                         <td style={{width: "auto", maxWidth: "30%", wordBreak: "break-all"}}>
                             <div>
                                 <Link href={"/testplans/" + testplan.id} underline="none"
-                                      style={{display: 'flex', color: '#282828'}}>
+                                      style={{display: 'flex', color: theme.palette.text.primary}}>
                                     <Typography style={{paddingBottom: 2}}>
                                         {testplan.title}
                                     </Typography>

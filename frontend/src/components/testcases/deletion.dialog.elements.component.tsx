@@ -8,6 +8,7 @@ import SuiteCaseService from "../../services/suite.case.service";
 import {treeSuite} from "./suites.component";
 import {myCase} from "../models.interfaces";
 import {useTranslation} from "react-i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 interface Props {
     openDialogDeletion: boolean,
@@ -30,6 +31,7 @@ const DeletionDialogElements: React.FC<Props> = ({
                                                      setDetailedCaseInfo,
                                                      detailedCaseInfo
                                                  }) => {
+    const [, theme] = useMode();
     const {t} = useTranslation();
 
     function disagreeToDelete() {
@@ -59,7 +61,7 @@ const DeletionDialogElements: React.FC<Props> = ({
             onClose={disagreeToDelete}
         >
             <DialogContent>
-                <DialogContentText style={{fontSize: 20, color: "black", whiteSpace: "pre"}}>
+                <DialogContentText style={{fontSize: 20, color: theme.palette.text.primary, whiteSpace: "pre"}}>
                     {t("cases_delete.cases_delete")}
                     <br/>
                 </DialogContentText>
@@ -71,9 +73,8 @@ const DeletionDialogElements: React.FC<Props> = ({
                             width: "30%",
                             minWidth: 100,
                             height: "30%",
-                            backgroundColor: "#FFFFFF",
-                            border: '1px solid',
-                            color: "#000000",
+                            backgroundColor: theme.palette.lightButton,
+                            color: theme.palette.text.primary,
                         }}
                         onClick={disagreeToDelete}
                         title={"Нет"}>
@@ -86,8 +87,8 @@ const DeletionDialogElements: React.FC<Props> = ({
                             width: "30%",
                             minWidth: 100,
                             height: "30%",
-                            backgroundColor: "#696969",
-                            color: "#FFFFFF",
+                            backgroundColor: theme.palette.darkGreyButton,
+                            color: "white",
                         }}
                         onClick={agreeToDelete}
                         title={"Да"}>

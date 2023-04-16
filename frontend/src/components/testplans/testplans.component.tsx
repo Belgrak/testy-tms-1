@@ -18,6 +18,7 @@ import {defaultStatus, statuses} from "../model.statuses";
 import ProfileService from "../../services/profile.service";
 import {useTranslation} from "react-i18next";
 import {useParams} from "react-router-dom";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 export interface treeTestPlan {
     id: number,
@@ -49,6 +50,7 @@ const searchForSubtreeOfTestPlansUsingBFS = (startTrees: treeTestPlan[], testPla
 }
 
 const TestplansComponent: React.FC = () => {
+    const [, theme] = useMode();
     const {t} = useTranslation();
     const classes = useStyles()
     const params = useParams()
@@ -225,18 +227,14 @@ const TestplansComponent: React.FC = () => {
                     </Grid>}
                 </SplitterLayout>
             </div>
-            <div className={classes.rightGrid}>
+            <div className={classes.rightGrid} style={{backgroundColor: theme.palette.rightDialogPart}}>
                 <div className={classes.rightGridButton}>
                     <Button data-cy="create-testplan" sx={{
                         margin: "15px",
                         minWidth: "70%",
                         height: "45%",
-                        backgroundColor: "#FFFFFF",
-                        color: "#000000",
-                        "&:hover": {
-                            backgroundColor: "#f6f6f6",
-                            borderColor: "#000000",
-                        }
+                        backgroundColor: theme.palette.lightButton,
+                        color: theme.palette.text.primary,
                     }} onClick={handleShowCreationTestPlan}>{t("testplans.create_plan")}</Button>
                     <CreationTestplanComponent show={showCreationTestPlan} setShow={setShowCreationTestPlan}
                                                testPlans={testPlans}

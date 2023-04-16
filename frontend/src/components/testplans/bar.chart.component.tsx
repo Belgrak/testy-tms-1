@@ -1,8 +1,10 @@
 import React from 'react';
 import {BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer} from 'recharts';
 import {statuses} from "../model.statuses";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 const BarChartComponent = (props: { statistics: { label: string, value: number }[] }) => {
+    const [, theme] = useMode();
     const {statistics} = props
     let dataRecord: Record<string, number> = {}
     for (const i of statistics) {
@@ -23,7 +25,7 @@ const BarChartComponent = (props: { statistics: { label: string, value: number }
                 <Tooltip wrapperStyle={{zIndex: 100}} isAnimationActive={false}/>
                 {statistics.map((tests, index) =>
                     (<Bar textAnchor={tests.label} key={index} legendType="star" label={tests.label}
-                          dataKey={tests.label} stackId="a" barSize={20} fill={fill(tests.label)}/>)
+                          dataKey={tests.label} stackId="a" barSize={20} fill={theme.palette[tests.label]}/>)
                 )}
             </BarChart>
         </ResponsiveContainer>

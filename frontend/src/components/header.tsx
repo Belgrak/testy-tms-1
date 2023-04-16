@@ -15,10 +15,23 @@ import {NotificationsActive} from "@mui/icons-material";
 import AuthService from "../services/Authorization/auth.service";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import {useMode} from "../context/ColorModeContextProvider";
+import {Icon} from "@mui/material";
+import Stack from "@mui/material/Stack";
+import Divider from "@mui/material/Divider";
 
 const Header: React.FC = () => {
+    const [colorMode, theme] = useMode();
     const {t} = useTranslation();
     const navigate = useNavigate()
+    const changeMode = () => {
+        colorMode.toggleColorMode();
+        console.log(theme.palette.mode)
+        localStorage.setItem("mode", (theme.palette.mode == "dark") ? "light" : "dark");
+        window.location.reload();
+    }
 
     const buttons = [[t("header.cases"), "/testcases"], [t("header.test_plans"), "/testplans"]];
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
@@ -218,6 +231,15 @@ const Header: React.FC = () => {
                                         textDecoration: 'none',
                                     }}
                                 > {t("header.logout")} </Typography>
+                            </MenuItem>
+                            <Divider/>
+                            <MenuItem onClick={changeMode}>
+                                <Stack direction={"row"} alignItems={'center'} justifyContent={"center"}>
+                                    {theme.palette.mode === 'dark' ? t("settings.light") : t("settings.dark")} {t("settings.theme")}
+                                    <Icon style={{margin: "0px 0px 0px 10px"}}>
+                                        {theme.palette.mode === 'dark' ? <LightModeIcon/> : <DarkModeIcon/>}
+                                    </Icon>
+                                </Stack>
                             </MenuItem>
                         </Menu>
                     </Box>}

@@ -21,6 +21,9 @@
   },
   "settings": {
     "coming_soon": "This page is under development",
+    "dark": "Dark",
+    "light": "Light",
+    "theme": "mode",
     "lang": "Language",
     "save": "Submit"
   },

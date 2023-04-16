@@ -21,6 +21,7 @@ import {myCase} from "../models.interfaces";
 import {useTranslation} from "react-i18next";
 import localStorageTMS from "../../services/localStorageTMS";
 import i18next from "i18next";
+import {useMode} from "../../context/ColorModeContextProvider";
 
 
 export const CustomWidthTooltip = styled(({className, ...props}: TooltipProps) => (
@@ -74,6 +75,7 @@ export interface mainFieldInSuite {
 
 
 const SuitesComponent = () => {
+    const [, theme] = useMode();
     const formatter = new Intl.NumberFormat(i18next.language)
     const {t} = useTranslation();
     const classes = useStyles()
@@ -179,7 +181,7 @@ const SuitesComponent = () => {
                 {selectedSuiteForTreeView === undefined &&
                     <PaginationSuitesComponent countOfSuitesOnPage={countOfSuitesOnPage} treeSuites={treeSuites}/>}
             </div>
-            <div className={classes.rightGrid}>
+            <div className={classes.rightGrid} style={{backgroundColor: theme.palette.rightDialogPart}}>
                 <div className={classes.rightGridButtons}>
                     {selectedSuiteForTreeView !== undefined &&
                         <div>
@@ -189,11 +191,8 @@ const SuitesComponent = () => {
                                     margin: "15px 15px 0 15px",
                                     minWidth: "70%",
                                     height: "45%",
-                                    backgroundColor: "#FFFFFF",
-                                    color: "#000000",
-                                    "&:hover": {
-                                        backgroundColor: "#fffafa",
-                                    }
+                                    backgroundColor: theme.palette.lightButton,
+                                    color: theme.palette.text.primary,
                                 }} onClick={handleShowCreationCase}>{t("suites.create_case")}</Button>
                             <CreationCase show={showCreationCase} setShow={setShowCreationCase}
                                           selectedSuiteCome={selectedSuiteCome} setTreeSuites={setTreeSuites}
@@ -213,7 +212,7 @@ const SuitesComponent = () => {
                         backgroundColor: "#696969",
                         color: "#FFFFFF",
                         "&:hover": {
-                            backgroundColor: "#777676",
+                            color: theme.palette.text.primary,
                         }
                     }} onClick={handleShowCreationSuite}>{t("suites.create_suite")}</Button>
                     <CreationSuite show={showCreationSuite} setShow={setShowCreationSuite}

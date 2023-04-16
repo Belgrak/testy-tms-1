@@ -3,10 +3,12 @@ import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XA
 import {test} from "../../models.interfaces";
 import {statuses} from "../../model.statuses";
 import {MomentTMS} from "../../../services/momentTMS";
+import {useMode} from "../../../context/ColorModeContextProvider";
 
 const LineChartComponent = (props: {
     tests: test[]
 }) => {
+    const [, theme] = useMode();
     const momentTMS = MomentTMS.initWithFormat;
     const sliceOfTests = props.tests.slice(0, 100).sort((a, b) =>
         momentTMS(a.updated_at).valueOf() - momentTMS(b.updated_at).valueOf())
@@ -51,7 +53,7 @@ const LineChartComponent = (props: {
                 <Legend/>
                 {statuses.map((status, index) =>
                     <Line key={index} name={status.name} type="monotone" dataKey={status.name.toLowerCase()}
-                          stroke={status.color}
+                          stroke={theme.palette[status.name.toLowerCase()]}
                           strokeWidth={3}
                           dot={false}/>)}
             </LineChart>
