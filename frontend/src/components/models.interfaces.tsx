@@ -46,8 +46,15 @@ export interface myCase {
     description: string;
     teardown: string;
     setup: string;
+    is_steps: boolean;
+    steps: stepInput[];
     url?: string;
     attachments: attachment[];
+}
+
+export interface testsQuery {
+    count: number;
+    results: test[];
 }
 
 export interface test {
@@ -102,4 +109,19 @@ export interface user {
 export interface planStatistic {
     label: string,
     value: number
+}
+
+export interface step {
+    id: number,
+    name: string,
+    scenario: string,
+    sort_order: number,
+    attachments: attachment[]
+}
+
+export interface stepInput {
+    name: string,
+    scenario: string,
+    sort_order?: number,
+    attachments?: attachment[]
 }

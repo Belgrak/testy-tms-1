@@ -1,4 +1,5 @@
 import axiosTMS from "./axiosTMS";
+import localStorageTMS from "./localStorageTMS";
 
 export default class ProjectService {
 
@@ -7,15 +8,33 @@ export default class ProjectService {
     }
 
     static getTestPlans() {
-        return axiosTMS.get("api/v1/testplans/")
+        const projectId = localStorageTMS.getCurrentProject().id
+        let config = {
+            params: {
+                project: projectId
+            },
+        }
+        return axiosTMS.get("api/v1/testplans/", config)
     }
 
     static getTests() {
-        return axiosTMS.get("api/v1/tests/")
+        const projectId = localStorageTMS.getCurrentProject().id
+        let config = {
+            params: {
+                project: projectId
+            },
+        }
+        return axiosTMS.get("api/v1/tests/", config)
     }
 
     static getTestResults() {
-        return axiosTMS.get("api/v1/results/")
+        const projectId = localStorageTMS.getCurrentProject().id
+        let config = {
+            params: {
+                project: projectId
+            },
+        }
+        return axiosTMS.get("api/v1/results/", config)
     }
 
     static getStatistics(id: number) {

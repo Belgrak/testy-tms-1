@@ -1,8 +1,17 @@
 import {statuses} from "../../../../src/components/model.statuses";
-import {myCase, planStatistic, test, testPlan, project, testResult} from "../../../../src/components/models.interfaces";
+import {
+    myCase,
+    planStatistic,
+    test,
+    testPlan,
+    project,
+    testResult,
+    testsQuery
+} from "../../../../src/components/models.interfaces";
 import {suite} from "../../../../src/components/testcases/suites.component";
 import moment from "moment";
 import localStorageTMS from "../../../../src/services/localStorageTMS";
+import {MomentTMS} from "../../../../src/services/momentTMS";
 
 describe('Testing functionality on the project page', () => {
     let testPlanID = 0;
@@ -58,9 +67,13 @@ describe('Testing functionality on the project page', () => {
                     headers: {
                         Authorization: 'Bearer ' + localStorageTMS.getAccessToken(),
                         "Content-Type": "application/json"
+                    },
+                    qs: {
+                        project: project.id
                     }
                 }).then((response) => {
-                    const tests: test[] = response.body.filter((test: test) => test.project == project.id)
+                    const testsQuery: testsQuery = response.body
+                    const tests = testsQuery.results
 
                     cy.request({
                         method: 'GET',
@@ -68,12 +81,16 @@ describe('Testing functionality on the project page', () => {
                         headers: {
                             Authorization: 'Bearer ' + localStorageTMS.getAccessToken(),
                             "Content-Type": "application/json"
+                        },
+                        qs: {
+                            project: project.id
                         }
                     }).then((response) => {
                         let testPlan = response.body
                             .find((plan: testPlan) => plan.title === "Тест-план для cy" &&
                                 tests.filter((test) => test.plan == plan.id).length === statuses.length
                             )
+                        console.log(testPlan)
                         if (!testPlan) {
                             const casesId = Array<number>()
 
@@ -83,6 +100,9 @@ describe('Testing functionality on the project page', () => {
                                 headers: {
                                     Authorization: 'Bearer ' + localStorageTMS.getAccessToken(),
                                     "Content-Type": "application/json"
+                                },
+                                qs: {
+                                    project: project.id
                                 }
                             }).then((response) => {
                                 const cases: myCase[] = response.body.filter((value: myCase) => value.project === project.id)
@@ -151,6 +171,9 @@ describe('Testing functionality on the project page', () => {
                                 headers: {
                                     Authorization: 'Bearer ' + localStorageTMS.getAccessToken(),
                                     "Content-Type": "application/json"
+                                },
+                                qs: {
+                                    project: project.id
                                 }
                             }).then((response) => {
                                 const statistics: planStatistic[] = response.body
@@ -179,6 +202,9 @@ describe('Testing functionality on the project page', () => {
                             cy.request({
                                 method: 'GET',
                                 url: 'http://localhost:8001/api/v1/results/',
+                                qs: {
+                                    project: project.id
+                                }
                             }).then(() => {
                                 const results: testResult[] = response.body.filter((result: testResult) => result.project == project.id)
                                 const tests_ids = currentTests.map((test) => test.id)
@@ -203,13 +229,13 @@ describe('Testing functionality on the project page', () => {
     it('display table header', () => {
         cy.visit('/project')
         cy.get('thead tr').contains('th', 'ID').should('be.visible')
-        cy.get('thead tr').contains('th', 'НАЗВАНИЕ ТЕСТ-ПЛАНА').should('be.visible')
-        cy.get('thead tr').contains('th', 'ВСЕГО ТЕСТОВ').should('be.visible')
+        cy.get('thead tr').contains('th', 'Название тест-плана').should('be.visible')
+        cy.get('thead tr').contains('th', 'Всего тестов').should('be.visible')
         statuses.forEach((value) => {
             cy.get('thead tr').contains('th', value.name.toUpperCase()).scrollIntoView().should('be.visible')
         })
-        cy.get('thead tr').contains('th', 'ДАТА ИЗМЕНЕНИЯ').scrollIntoView().should('be.visible')
-        cy.get('thead tr').contains('th', 'КЕМ ИЗМЕНЕНО').scrollIntoView().should('be.visible')
+        cy.get('thead tr').contains('th', 'Дата изменения').scrollIntoView().should('be.visible')
+        cy.get('thead tr').contains('th', 'Кем изменено').scrollIntoView().should('be.visible')
     })
 
     it('display table data', () => {
@@ -220,9 +246,13 @@ describe('Testing functionality on the project page', () => {
             headers: {
                 Authorization: 'Bearer ' + localStorageTMS.getAccessToken(),
                 "Content-Type": "application/json"
+            },
+            qs: {
+                project: localStorageTMS.getCurrentProject().id
             }
         }).then((response) => {
-            const curTests: test[] = response.body.filter((test: test) => test.plan == testPlanID)
+            const testsQuery: testsQuery = response.body
+            const curTests = testsQuery.results
             if (currentStatistics == null)
                 cy.get('tbody tr')
                     .should("contain", `${testPlanID}Тест-план для cy${curTests.length}${"1".repeat(curTests.length)}${updateDate ?? moment().format("DD.MM.YYYY")}${currentUsername}`)
@@ -250,14 +280,15 @@ describe('Testing functionality on the project page', () => {
     })
 
     it('filter date work', () => {
+        const momentTMS = MomentTMS.init;
         cy.visit('/project')
         cy.contains('Фильтр').click()
-        cy.get('input[value="01/01/1970"]').clear().type(moment().add(1, 'days').format('DD/MM/YYYY'))
+        cy.get('input[value="01.01.1970"]').clear().type(momentTMS().add(1, 'days').format('L'))
         cy.contains('Тест-план для cy').should('not.exist')
 
         cy.visit('/project')
         cy.contains('Фильтр').click()
-        cy.get(`input[value="${moment().format('DD/MM/YYYY')}"]`).clear().type('01/01/1970')
+        cy.get(`input[value="${momentTMS().format('L')}"]`).clear().type('01.01.1970')
         cy.contains('Тест-план для cy').should('not.exist')
     })
 

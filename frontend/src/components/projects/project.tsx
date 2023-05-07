@@ -2,7 +2,7 @@ import React, {ChangeEvent, useEffect, useMemo, useState} from 'react';
 import {DesktopDatePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {Moment} from "moment";
 import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
-import {test, testPlan, testResult, user} from "../models.interfaces";
+import {test, testPlan, testResult, testsQuery, user} from "../models.interfaces";
 import ProjectService from "../../services/project.service";
 import {statuses} from "../model.statuses";
 import useStyles from "../../styles/styles";
@@ -128,17 +128,16 @@ const Project: React.FC = () => {
         }).catch((e) => console.log(e))
 
         ProjectService.getTestPlans().then((response) => {
-            let testPlansData: testPlan[] = response.data
-            testPlansData = testPlansData.filter((value) => value.project === projectValue.id)
+            const testPlansData: testPlan[] = response.data
             setTestPlans(testPlansData)
 
             ProjectService.getTests().then((response) => {
-                const testsData: test[] = response.data
-                setTests(testsData.filter((value) => value.project === projectValue.id))
+                const testsData: testsQuery = response.data
+                setTests(testsData.results)
 
                 ProjectService.getTestResults().then((response) => {
                     const testResultsData: testResult[] = response.data
-                    setResults(testResultsData.filter((value) => value.project === projectValue.id))
+                    setResults(testResultsData)
                 })
 
                 ProjectService.getUsers().then((response) => {
