@@ -6,8 +6,13 @@ export default class SuiteCaseService {
 
     static getSuites() {
         const projectId = localStorageTMS.getCurrentProject().id
+        let config = {
+            params: {
+                project: projectId
+            },
+        }
         if (projectId) {
-            return axiosTMS.get("api/v1/suites/?project=" + projectId)
+            return axiosTMS.get("api/v1/suites/", config)
         } else {
             return axiosTMS.get("api/v1/suites/")
         }
@@ -17,10 +22,16 @@ export default class SuiteCaseService {
         return axiosTMS.get("api/v1/suites/" + id + "/")
     }
 
-    static getCases() {
+    static getCases(suiteId?: number) {
         const projectId = localStorageTMS.getCurrentProject().id
+        let config = {
+            params: {
+                project: projectId,
+                suite: suiteId
+            },
+        }
         if (projectId) {
-            return axiosTMS.get("api/v1/cases/?project=" + projectId)
+            return axiosTMS.get("api/v1/cases/", config)
         } else {
             return axiosTMS.get("api/v1/cases/")
         }
@@ -32,8 +43,13 @@ export default class SuiteCaseService {
 
     static getTreeBySetSuite(id: number) {
         const projectId = localStorageTMS.getCurrentProject().id
+        let config = {
+            params: {
+                project: projectId
+            },
+        }
         if (projectId) {
-            return axiosTMS.get("api/v1/suites/" + id + "/?project=" + projectId + "&treeview=true")
+            return axiosTMS.get("api/v1/suites/?treeview=true", config)
         } else {
             return axiosTMS.get("api/v1/suites/" + id + "/?treeview=true")
         }
@@ -41,8 +57,13 @@ export default class SuiteCaseService {
 
     static getTreeSuites() {
         const projectId = localStorageTMS.getCurrentProject().id
+        let config = {
+            params: {
+                project: projectId
+            },
+        }
         if (projectId) {
-            return axiosTMS.get("api/v1/suites/?project=" + projectId + "&treeview=true")
+            return axiosTMS.get("api/v1/suites/?treeview=true", config)
         } else {
             return axiosTMS.get("api/v1/suites/?treeview=true")
         }
@@ -90,6 +111,8 @@ export default class SuiteCaseService {
                 project: -1,
                 setup: "",
                 teardown: "",
+                is_steps: false,
+                steps: [],
                 estimate: -1,
                 attachments: []
             }

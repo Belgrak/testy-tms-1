@@ -34,13 +34,11 @@ from http import HTTPStatus
 
 import pytest
 from django.forms import model_to_dict
-from tests_description.api.v1.serializers import TestCaseSerializer
 from tests_description.models import TestCase
 
 from tests import constants
-from tests.commons import RequestType, model_to_dict_via_serializer
+from tests.commons import RequestType
 from tests.error_messages import REQUIRED_FIELD_MSG
-from tests.factories import ProjectFactory, TestSuiteFactory
 
 
 @pytest.mark.django_db
@@ -48,16 +46,17 @@ class TestCaseEndpoints:
     view_name_detail = 'api:v1:testcase-detail'
     view_name_list = 'api:v1:testcase-list'
 
-    def test_list(self, api_client, authorized_superuser, test_case_factory):
+    def test_list(self, api_client, authorized_superuser, test_case_factory, project):
         expected_instances = []
         for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE):
-            expected_dict = model_to_dict(test_case_factory())
+            expected_dict = model_to_dict(test_case_factory(project=project))
             expected_dict['attachments'] = []
+            expected_dict['steps'] = []
             expected_dict['key'] = expected_dict['id']
             expected_dict['value'] = expected_dict['id']
             expected_instances.append(expected_dict)
 
-        response = api_client.send_request(self.view_name_list)
+        response = api_client.send_request(self.view_name_list, query_params={'project': project.id})
 
         for instance_dict in json.loads(response.content):
             instance_dict.pop('url')
@@ -66,6 +65,9 @@ class TestCaseEndpoints:
     def test_retrieve(self, api_client, authorized_superuser, test_case):
         expected_dict = model_to_dict(test_case)
         expected_dict['attachments'] = []
+        expected_dict['steps'] = []
+        expected_dict['versions'] = list(test_case.history.values_list('history_id', flat=True).all())
+        expected_dict['current_version'] = test_case.history.first().history_id
         response = api_client.send_request(self.view_name_detail, reverse_kwargs={'pk': test_case.pk})
         actual_dict = json.loads(response.content)
         actual_dict.pop('url')
@@ -91,12 +93,15 @@ class TestCaseEndpoints:
         new_name = 'new_expected_test_case_name'
         case_dict = {
             'id': test_case.id,
-            'name': new_name
+            'name': new_name,
+            'project': test_case.project.id,
+            'suite': test_case.suite.id,
+            'scenario': test_case.scenario,
         }
         api_client.send_request(
             self.view_name_detail,
             case_dict,
-            request_type=RequestType.PATCH,
+            request_type=RequestType.PUT,
             reverse_kwargs={'pk': test_case.pk}
         )
         actual_name = TestCase.objects.get(pk=test_case.id).name
@@ -138,34 +143,3 @@ class TestCaseEndpoints:
             reverse_kwargs={'pk': test_case.pk}
         )
         assert not TestCase.objects.count(), f'TestCase with id "{test_case.id}" was not deleted.'
-
-
-@pytest.mark.django_db
-class TestCaseEndpointsQueryParams:
-    view_name_list = 'api:v1:testcase-list'
-
-    @pytest.mark.parametrize(
-        'field_name, factory',
-        [('project', ProjectFactory), ('suite', TestSuiteFactory)],
-        ids=['TestCase filter by project query param', 'TestCase filter by suite query param']
-    )
-    def test_case_filter(self, api_client, authorized_superuser, test_case_factory, field_name, factory):
-        instances = [factory() for _ in range(3)]
-        for _ in range(2):
-            for instance in instances:
-                test_case_factory(**{field_name: instance})
-        for instance in instances:
-            filtered_instances = TestCase.objects.filter(**{field_name: instance.id})
-            expected_dict = model_to_dict_via_serializer(
-                filtered_instances,
-                serializer_class=TestCaseSerializer,
-                many=True
-            )
-            response = api_client.send_request(
-                self.view_name_list,
-                expected_status=HTTPStatus.OK,
-                request_type=RequestType.GET,
-                query_params={field_name: instance.id}
-            )
-            actual_dict = json.loads(response.content)
-            assert actual_dict == expected_dict, 'Actual and expected dict are different.'

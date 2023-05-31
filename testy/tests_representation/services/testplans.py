@@ -32,6 +32,7 @@ from typing import Any, Dict, List
 
 from django.db import transaction
 from tests_representation.models import TestPlan
+from tests_representation.selectors.parameters import ParameterSelector
 from tests_representation.services.tests import TestService
 from tests_representation.utils import combination_parameters
 
@@ -53,11 +54,13 @@ class TestPlanService:
     @transaction.atomic
     def testplan_bulk_create(self, data=Dict[str, Any]) -> List[TestPlan]:
         parameters = data.get('parameters')
-        test_plans = []
+        test_plans: List[TestPlan] = []
         for combine_parameter in combination_parameters(parameters):
-            test_plan_object = TestPlan.model_create(fields=self.non_side_effect_fields, data=data, commit=False)
-            test_plan_object.parameters = combine_parameter
+            test_plan_object: TestPlan = TestPlan.model_create(
+                fields=self.non_side_effect_fields, data=data, commit=False
+            )
             test_plan_object.save()
+            test_plan_object.parameters.set(ParameterSelector().parameter_list_by_ids(combine_parameter))
             test_plans.append(test_plan_object)
 
         if test_cases := data.get('test_cases', []):

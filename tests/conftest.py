@@ -116,4 +116,4 @@ def several_test_plans_from_api(api_client, authorized_superuser, parameter_fact
         response = api_client.send_request('api:v1:testplan-list', testplan_dict, HTTPStatus.CREATED, RequestType.POST)
         test_plans.append(json.loads(response.content)[0])
 
-    return test_plans
+    return test_plans, project.id

@@ -44,6 +44,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from core.views import AttachmentView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -56,6 +57,8 @@ from plugins.url import plugin_api_urls, plugin_urls
 from rest_framework import permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from .auth.views import TTLTokenViewSet
+
 schema_view = get_schema_view(
     openapi.Info(
         title="testy API",
@@ -66,9 +69,14 @@ schema_view = get_schema_view(
     permission_classes=[permissions.AllowAny],
 )
 
+ttl_token_list_view = TTLTokenViewSet.as_view({'get': 'list', 'post': 'create'})
+ttl_token_detail_view = TTLTokenViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'})
+
 urlpatterns = [
     # API
     path('api/', include('testy.api.urls', namespace='api')),
+    path('api/token/obtain/', ttl_token_list_view, name='ttltoken-list'),
+    path('api/token/obtain/<str:key>/', ttl_token_detail_view, name='ttltoken-detail'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),

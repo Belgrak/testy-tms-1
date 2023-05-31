@@ -28,105 +28,124 @@
 # if any, to sign a "copyright disclaimer" for the program, if necessary.
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
-from core.models import Project
 from django.contrib.auth import get_user_model
 from django.shortcuts import redirect, render
-from django.urls import reverse
-from rest_framework import mixins, status
-from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from utilities.request import get_boolean
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
+from .forms import MigratorDownloadForm, MigratorUploadForm, TestrailSettingsForm
 from .models import TestrailBackup, TestrailSettings
-from .serializers import (
-    DownloadSerializer,
-    TestrailBackupSerializer,
-    TestrailSettingsInputSerializer,
-    TestrailSettingsOutputSerializer,
-    TestrailUploadSerializer,
-    TestyDeleteProjectSerializer,
-)
-from .tasks import download_task, upload_task
+from .tasks import download_milestone_task, download_task, upload_task
 
 UserModel = get_user_model()
-
-
-class TestrailSettingsViewSet(ModelViewSet):
-    queryset = TestrailSettings.objects.all()
-
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return TestrailSettingsInputSerializer
-        else:
-            return TestrailSettingsOutputSerializer
-
-
-class TestrailBackupViewSet(ModelViewSet):
-    serializer_class = TestrailBackupSerializer
-    queryset = TestrailBackup.objects.all()
-
-
-class DownloadViewSet(mixins.CreateModelMixin, GenericViewSet):
-    serializer_class = DownloadSerializer
-
-    def create(self, request, *args, **kwargs):
-        project_id = request.POST.get('project_id')
-        download_attachments = get_boolean(request, 'download_attachments', 'POST')
-        ignore_completed = get_boolean(request, 'ignore_completed', 'POST')
-        backup_filename = request.POST.get('backup_filename')
-
-        if not project_id:
-            return Response('testrail project id was not specified', status.HTTP_400_BAD_REQUEST)
-        try:
-            testrail_settings = TestrailSettings.objects.get(pk=request.POST.get('testrail_settings'))
-        except TestrailSettings.DoesNotExist:
-            return Response('Testrail settings instance were not found', status=status.HTTP_400_BAD_REQUEST)
-
-        config_dict = {
-            'login': testrail_settings.login,
-            'password': testrail_settings.password,
-            'api_url': testrail_settings.api_url,
-        }
-        task = download_task.delay(project_id, config_dict, download_attachments, ignore_completed, backup_filename)
-        return redirect(reverse('plugins:testrail_migrator:task_status', kwargs={'task_id': task.task_id}))
 
 
 def task_status(request, task_id):
     return render(request, 'task_status.html', {'task_id': task_id})
 
 
-class UploaderView(mixins.CreateModelMixin, GenericViewSet):
-    serializer_class = TestrailUploadSerializer
-
-    def create(self, request, *args, **kwargs):
-        backup_instance = TestrailBackup.objects.get(pk=request.POST.get('testrail_backup'))
-        upload_root_runs = get_boolean(request, 'upload_root_runs', 'POST')
-
-        try:
-            testrail_settings = TestrailSettings.objects.get(pk=request.POST.get('testrail_settings'))
-        except TestrailSettings.DoesNotExist:
-            return Response('Testrail settings instance were not found', status=status.HTTP_400_BAD_REQUEST)
-
-        config_dict = {
-            'login': testrail_settings.login,
-            'password': testrail_settings.password,
-            'api_url': testrail_settings.api_url,
-        }
-
-        task = upload_task.delay(
-            backup_name=backup_instance.name,
-            config_dict=config_dict,
-            testy_attachment_url=testrail_settings.testy_attachments_url,
-            upload_root_runs=upload_root_runs
-        )
-        return redirect(reverse('plugins:testrail_migrator:task_status', kwargs={'task_id': task.task_id}))
+class TestrailSettingsListView(ListView):
+    model = TestrailSettings
+    context_object_name = 'configs'
+    template_name = 'migrator_configs_list.html'
+    queryset = TestrailSettings.objects.all()
 
 
-class TestyDeleteProjectViewSet(mixins.CreateModelMixin, GenericViewSet):
-    serializer_class = TestyDeleteProjectSerializer
+class TestrailBackupListView(ListView):
+    model = TestrailBackup
+    context_object_name = 'backups'
+    template_name = 'migrator_backups_list.html'
+    queryset = TestrailBackup.objects.all()
 
-    def create(self, request, *args, **kwargs):
-        Project.objects.get(pk=request.POST.get('testy_project')).delete()
-        if get_boolean(request, 'wipe_users', 'POST'):
-            UserModel.objects.all().exclude(username='admin').delete()
-        return redirect(reverse('plugins:testrail_migrator:delete'))
+
+class TestrailBackupDeleteView(DeleteView):
+    model = TestrailBackup
+    template_name = 'migrator_confirm_delete.html'
+    success_url = reverse_lazy('plugins:testrail_migrator:backup-list')
+
+
+class TestrailSettingsCreateView(CreateView):
+    model = TestrailSettings
+    form_class = TestrailSettingsForm
+    template_name = 'migrator_settings_form.html'
+    success_url = reverse_lazy('plugins:testrail_migrator:settings-list')
+
+
+class TestrailSettingsUpdateView(UpdateView):
+    model = TestrailSettings
+    form_class = TestrailSettingsForm
+    template_name = 'migrator_settings_form.html'
+    success_url = reverse_lazy('plugins:testrail_migrator:settings-list')
+
+
+class TestrailSettingsDeleteView(DeleteView):
+    model = TestrailSettings
+    form_class = TestrailSettingsForm
+    template_name = 'migrator_confirm_delete.html'
+    success_url = reverse_lazy('plugins:testrail_migrator:settings-list')
+
+
+def redirect_index(request):
+    return redirect(reverse('plugins:testrail_migrator:settings-list'))
+
+
+def download_view(request):
+    form = MigratorDownloadForm()
+    if request.method == 'POST':
+        form = MigratorDownloadForm(request.POST)
+        if form.is_valid():
+            project_id = form.cleaned_data['project_id']
+            milestone_ids = form.cleaned_data['milestone_ids']
+            replacement_project_name = form.cleaned_data['replacement_project_name']
+            download_attachments = form.cleaned_data['download_attachments']
+            ignore_completed = form.cleaned_data['ignore_completed']
+            backup_filename = form.cleaned_data['backup_filename']
+            testrail_login = form.cleaned_data['testrail_login']
+            testrail_password = form.cleaned_data['testrail_password']
+            testrail_settings = form.cleaned_data['testrail_config']
+
+            config_dict = {
+                'login': testrail_login,
+                'password': testrail_password,
+                'api_url': testrail_settings.testrail_api_url,
+            }
+
+            if milestone_ids:
+                task = download_milestone_task.delay(project_id,
+                                                     replacement_project_name,
+                                                     milestone_ids, config_dict, download_attachments,
+                                                     ignore_completed,
+                                                     backup_filename)
+            else:
+                task = download_task.delay(project_id, config_dict, download_attachments, ignore_completed,
+                                           backup_filename)
+            return redirect(reverse('plugins:testrail_migrator:task_status', kwargs={'task_id': task.task_id}))
+
+    return render(request, 'migrator_download.html', {'form': form})
+
+
+def upload_view(request):
+    form = MigratorUploadForm()
+    if request.method == 'POST':
+        form = MigratorUploadForm(request.POST)
+        if form.is_valid():
+            backup_instance = form.cleaned_data.get('testrail_backup')
+            upload_root_runs = form.cleaned_data.get('upload_root_runs')
+            testrail_login = form.cleaned_data.get('testrail_login')
+            testrail_password = form.cleaned_data.get('testrail_password')
+            testrail_settings = form.cleaned_data['testrail_config']
+
+            config_dict = {
+                'login': testrail_login,
+                'password': testrail_password,
+                'api_url': testrail_settings.testrail_api_url,
+            }
+
+            task = upload_task.delay(
+                backup_name=backup_instance.name,
+                config_dict=config_dict,
+                testy_attachment_url=testrail_settings.testy_attachments_url,
+                upload_root_runs=upload_root_runs
+            )
+            return redirect(reverse('plugins:testrail_migrator:task_status', kwargs={'task_id': task.task_id}))
+    return render(request, 'migrator_upload.html', {'form': form})

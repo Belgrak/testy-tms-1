@@ -23,6 +23,7 @@ export interface testResult {
     id: number;
     project: number,
     status: number;
+    status_text: string;
     status_color: { id: number, name: string, color: string };
     attachments: attachment[];
     test: number;
@@ -31,6 +32,7 @@ export interface testResult {
     comment?: string;
     is_archive: boolean;
     test_case_version: number;
+    steps_results: testStepResult[];
     created_at: string,
     updated_at: string;
     execution_time?: number;
@@ -123,5 +125,13 @@ export interface stepInput {
     name: string,
     scenario: string,
     sort_order?: number,
-    attachments?: attachment[]
+    attachments?: File[]
+}
+
+export interface testStepResult {
+    id?: number;
+    step: number;
+    name?: string;
+    status?: number;
+    sort_order?: string;
 }

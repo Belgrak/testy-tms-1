@@ -33,6 +33,7 @@ import logging
 from typing import Any, Dict, List, Tuple
 
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from testy.types import DjangoModelType
@@ -56,7 +57,7 @@ class ServiceModelMixin(models.Model):
         return instance
 
     def model_update(
-            self, fields: List[str], data: Dict[str, Any], commit: bool = True
+            self, fields: List[str], data: Dict[str, Any], commit: bool = True, force: bool = False
     ) -> Tuple[DjangoModelType, bool]:
         has_updated = False
 
@@ -68,12 +69,60 @@ class ServiceModelMixin(models.Model):
                 has_updated = True
                 setattr(self, field, data[field])
 
-        if has_updated and commit:
+        if (has_updated and commit) or force:
             self.full_clean()
             self.save(update_fields=fields)
         if not has_updated:
             logger.error('Model was not updated.')
         return self, has_updated
+
+
+class SoftDeleteQuerySet(models.query.QuerySet):
+    def delete(self, cascade=None):
+        return self.update(is_deleted=True, deleted_at=timezone.now())
+
+    def hard_delete(self):
+        return super().delete()
+
+
+class SoftDeleteManager(models.Manager):
+    def get_queryset(self):
+        return SoftDeleteQuerySet(self.model, using=self._db).filter(is_deleted=False)
+
+
+class DeletedQuerySet(models.query.QuerySet):
+    def restore(self, *args, **kwargs):
+        qs = self.filter(*args, **kwargs)
+        qs.update(is_deleted=False, deleted_at=None)
+
+
+class DeletedManager(models.Manager):
+    def get_queryset(self):
+        return DeletedQuerySet(self.model, using=self._db).filter(is_deleted=True)
+
+
+class SoftDeleteMixin(models.Model):
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
+    objects = SoftDeleteManager()
+    deleted_objects = DeletedManager()
+
+    def delete(self):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
+
+    def restore(self):
+        self.is_deleted = False
+        self.deleted_at = None
+        self.save()
+
+    def hard_delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+
+    class Meta:
+        abstract = True
 
 
 class BaseModel(ServiceModelMixin, models.Model):

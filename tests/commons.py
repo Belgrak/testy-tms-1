@@ -65,7 +65,9 @@ class CustomAPIClient(APIClient):
             request_type: RequestType = RequestType.GET,
             reverse_kwargs: Dict[str, Any] = None,
             format='json',
-            query_params: Dict[str, Any] = None
+            query_params: Dict[str, Any] = None,
+            additional_error_msg: str = None,
+            headers: Dict[str, Any] = None
     ):
         url = reverse(view_name, kwargs=reverse_kwargs)
         if query_params:
@@ -73,11 +75,16 @@ class CustomAPIClient(APIClient):
         http_request = getattr(self, request_type.value, None)
         if not http_request:
             raise TypeError('Request type is not known')
-        response = http_request(url, data=data, format=format)
+        if headers:
+            response = http_request(url, data=data, format=format, **headers)
+        else:
+            response = http_request(url, data=data, format=format)
 
-        assert response.status_code == expected_status, f'Expected response code "{expected_status}", ' \
-                                                        f'actual: "{response.status_code}"' \
-                                                        f'Response content: {response.content}'
+        additional_info = f'\nAdditional info: {additional_error_msg}' if additional_error_msg else ''
+        err_msg = f'Expected response code "{expected_status}", actual: "{response.status_code}"' \
+                  f'Response content: {response.content}{additional_info}'
+
+        assert response.status_code == expected_status, err_msg
         return response
 
 
@@ -88,6 +95,10 @@ def model_with_base_to_dict(instance) -> Dict[str, Any]:
     return instance_dict
 
 
-def model_to_dict_via_serializer(instances: Union[QuerySet, Any], serializer_class, many=False) -> List[dict]:
+def model_to_dict_via_serializer(
+        instances: Union[QuerySet, Any],
+        serializer_class,
+        many=False
+) -> Union[List[dict], Dict[str, str]]:
     serializer = serializer_class(instances if many else instances[0], many=many, context={'request': RequestMock()})
     return [dict(elem) for elem in serializer.data] if many else dict(serializer.data)

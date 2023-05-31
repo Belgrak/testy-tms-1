@@ -36,7 +36,7 @@ from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 from simple_history.models import HistoricalRecords
 
-from testy.models import BaseModel
+from testy.models import BaseModel, SoftDeleteMixin
 
 
 class TestSuite(MPTTModel, BaseModel):
@@ -60,7 +60,7 @@ class TestCase(BaseModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     suite = models.ForeignKey(TestSuite, on_delete=models.CASCADE, related_name='test_cases')
     setup = models.TextField(blank=True)
-    scenario = models.TextField()
+    scenario = models.TextField(blank=True)
     teardown = models.TextField(blank=True)
     estimate = models.IntegerField(
         null=True,
@@ -70,9 +70,24 @@ class TestCase(BaseModel):
     attachments = GenericRelation(Attachment)
     history = HistoricalRecords()
     description = models.TextField('description', default='', blank=True)
+    is_steps = models.BooleanField(default=False)
 
     class Meta:
         default_related_name = 'test_cases'
 
     def __str__(self):
         return self.name
+
+
+class TestCaseStep(SoftDeleteMixin, BaseModel):
+    name = models.CharField(max_length=settings.CHAR_FIELD_MAX_LEN)
+    scenario = models.TextField()
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    test_case = models.ForeignKey(TestCase, on_delete=models.CASCADE, null=True, blank=True, related_name='steps')
+    test_case_history_id = models.IntegerField(null=True, blank=True)
+    history = HistoricalRecords()
+    attachments = GenericRelation(Attachment)
+    sort_order = models.PositiveIntegerField(default=0, blank=False, null=False)
+
+    class Meta:
+        ordering = ('sort_order', 'id',)

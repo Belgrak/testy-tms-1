@@ -47,14 +47,14 @@ class TestSuiteEndpoints:
     view_name_list = 'api:v1:testsuite-list'
     view_name_detail = 'api:v1:testsuite-detail'
 
-    def test_list(self, api_client, authorized_superuser, test_suite_factory):
+    def test_list(self, api_client, authorized_superuser, test_suite_factory, project):
         expected_instances = []
         for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE):
-            expected_dict = model_to_dict(test_suite_factory())
+            expected_dict = model_to_dict(test_suite_factory(project=project))
             expected_dict['test_cases'] = []
             expected_instances.append(expected_dict)
 
-        response = api_client.send_request(self.view_name_list)
+        response = api_client.send_request(self.view_name_list, query_params={'project': project.id})
         for instance_dict in json.loads(response.content):
             instance_dict.pop('url')
             assert instance_dict in expected_instances, f'{instance_dict} was not found in expected instances.'
@@ -150,15 +150,18 @@ class TestSuiteEndpointsQueryParams:
             actual_dict = json.loads(response.content)
             assert actual_dict == expected_dict, 'Actual and expected dict are different.'
 
-    def test_suite_treeview(self, api_client, authorized_superuser, test_suite_factory, project_factory):
+    def test_suite_treeview(self, api_client, authorized_superuser, test_suite_factory, project_factory,
+                            test_case_factory):
         projects = [project_factory() for _ in range(3)]
 
         for _ in range(2):
             for project in projects:
-                test_suite_factory(project=project)
+                test_case_factory(suite=test_suite_factory(project=project))
 
         for project in projects:
             suites = TestSuite.objects.filter(project=project.id)
+            for suite in suites:
+                setattr(suite, 'cases_count', 1)
             expected_dict = model_to_dict_via_serializer(suites, serializer_class=TestSuiteTreeSerializer, many=True)
             incorrect_dict = model_to_dict_via_serializer(suites, serializer_class=TestSuiteSerializer, many=True)
             response = api_client.send_request(

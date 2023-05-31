@@ -28,12 +28,15 @@
 # if any, to sign a "copyright disclaimer" for the program, if necessary.
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
-
+from django.urls import path
 from rest_framework.routers import SimpleRouter
 from tests_description.api.v1 import views
 
 router = SimpleRouter()
 router.register('cases', views.TestCaseViewSet)
 router.register('suites', views.TestSuiteViewSet, basename='testsuite')
-
-urlpatterns = router.urls
+breadcrumbs_suites_view = views.TestSuiteViewSet.as_view({'get': 'breadcrumbs_view'})
+urlpatterns = [
+    path('suites/<int:pk>/parents/', breadcrumbs_suites_view, name='suite-breadcrumbs'),
+]
+urlpatterns += router.urls

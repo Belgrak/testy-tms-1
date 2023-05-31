@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from "@mui/material/Button";
-import {Chip, Grid, Tooltip} from "@mui/material";
+import {Chip, Grid} from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
 import AttachmentService from "../../services/attachment.servise";
 import useStyles from "../../styles/styles";
@@ -8,11 +8,12 @@ import {useTranslation} from "react-i18next";
 
 interface Props {
     setFilesSelected: (files: File[]) => void;
+    selectedFiles?: File[]
 }
 
-const AttachmentButton: React.FC<Props> = ({setFilesSelected}) => {
+const AttachmentButton: React.FC<Props> = ({setFilesSelected, selectedFiles}) => {
     const {t} = useTranslation();
-    const [attachments, setAttachments] = React.useState<File[]>()
+    const [attachments, setAttachments] = React.useState<File[]>(selectedFiles ?? [])
 
     const handleFileChange = function (e: React.ChangeEvent<HTMLInputElement>) {
         const fileList = e.target.files;
@@ -35,14 +36,6 @@ const AttachmentButton: React.FC<Props> = ({setFilesSelected}) => {
     return (
         <div style={{display: 'flex', flexDirection: 'column'}}>
             <label style={{marginBottom: 5}} htmlFor="fileSelection">
-                <input
-                    style={{display: "none"}}
-                    id="fileSelection"
-                    name="file"
-                    type="file"
-                    multiple={true}
-                    onChange={handleFileChange}
-                />
                 <Button
                     sx={{
                         backgroundColor: "#e0e0e0",
@@ -55,6 +48,14 @@ const AttachmentButton: React.FC<Props> = ({setFilesSelected}) => {
                     variant="contained"
                 >
                     {t("attachment.attach_file")}
+                    <input
+                        style={{position: "absolute", right: 0, opacity: 0, margin: 0, padding: 0, border: "none"}}
+                        id="fileSelection"
+                        name="file"
+                        type="file"
+                        multiple={true}
+                        onChange={handleFileChange}
+                    />
                 </Button>
             </label>
             <Grid className={classes.stackTags}>

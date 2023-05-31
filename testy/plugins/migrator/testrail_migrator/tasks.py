@@ -36,6 +36,7 @@ from typing import Dict
 
 import redis
 from celery import shared_task
+from core.models import Project
 from django.conf import settings
 from testrail_migrator.migrator_lib import TestRailClient, TestrailConfig, TestyCreator
 from testrail_migrator.migrator_lib.migrator_service import MigratorService
@@ -54,134 +55,139 @@ from utils import ProgressRecorderContext
 def upload_task(self, backup_name, config_dict, upload_root_runs: bool, service_user_login='admin',
                 testy_attachment_url: bool = None):
     progress_recorder = ProgressRecorderContext(self, total=21, description='Upload started')
+    try:
+        logging.info('redis about to start')
+        redis_client = redis.StrictRedis(settings.REDIS_HOST, settings.REDIS_PORT)
+        logging.info('redis started')
+        backup = json.loads(redis_client.get(backup_name))
 
-    logging.info('redis about to start')
-    redis_client = redis.StrictRedis(settings.REDIS_HOST, settings.REDIS_PORT)
-    logging.info('redis started')
-    backup = json.loads(redis_client.get(backup_name))
+        custom_fields_multi_select = parse_multi_select_from_tr(backup['custom_result_fields'])
+        custom_fields_labels = parse_labels_from_tr_fields(backup['custom_result_fields'])
 
-    custom_fields_multi_select = parse_multi_select_from_tr(backup['custom_result_fields'])
-    custom_fields_labels = parse_labels_from_tr_fields(backup['custom_result_fields'])
+        creator = TestyCreator(service_user_login, testy_attachment_url)
 
-    creator = TestyCreator(service_user_login, testy_attachment_url)
+        mappings = {}
 
-    mappings = {}
+        with progress_recorder.progress_context('Creating projects'):
+            project = MigratorService.create_project(backup['project'])
 
-    with progress_recorder.progress_context('Creating projects'):
-        project = MigratorService.create_project(backup['project'])
+        with progress_recorder.progress_context('Creating users'):
+            mappings['users'] = creator.create_users(backup['users'])
 
-    with progress_recorder.progress_context('Creating users'):
-        mappings['users'] = creator.create_users(backup['users'])
+        keys_without_mappings = ['suites', 'configs', 'milestones']
+        for key in keys_without_mappings:
+            with progress_recorder.progress_context(f'Creating {key}'):
+                create_method = getattr(creator, f'create_{key}')
+                mappings[key] = create_method(backup[key], project.id)
 
-    keys_without_mappings = ['suites', 'configs', 'milestones']
-    for key in keys_without_mappings:
-        with progress_recorder.progress_context(f'Creating {key}'):
-            create_method = getattr(creator, f'create_{key}')
-            mappings[key] = create_method(backup[key], project.id)
+        keys_with_single_mapping = [('sections', 'suites'), ('plans', 'milestones')]
+        for key, mapping_key in keys_with_single_mapping:
+            with progress_recorder.progress_context(f'Creating {key}'):
+                create_method = getattr(creator, f'create_{key}')
+                mappings[key] = create_method(backup[key], mappings[mapping_key], project.id)
 
-    keys_with_single_mapping = [('sections', 'suites'), ('plans', 'milestones')]
-    for key, mapping_key in keys_with_single_mapping:
-        with progress_recorder.progress_context(f'Creating {key}'):
-            create_method = getattr(creator, f'create_{key}')
-            mappings[key] = create_method(backup[key], mappings[mapping_key], project.id)
+        with progress_recorder.progress_context('Creating cases'):
+            mappings['cases'] = creator.create_cases(backup['cases'], mappings['suites'], mappings['sections'],
+                                                     project.id)
 
-    with progress_recorder.progress_context('Creating cases'):
-        mappings['cases'] = creator.create_cases(backup['cases'], mappings['suites'], mappings['sections'], project.id)
-
-    with progress_recorder.progress_context('Creating runs with plan as parent'):
-        mappings['tests_parent_plan'], mappings['runs_parent_plan'] = creator.create_runs(
-            runs=backup['runs_parent_plan'],
-            mapping=mappings['plans'],
-            config_mappings=mappings['configs'],
-            tests=backup['tests_parent_plan'],
-            case_mappings=mappings['cases'],
-            project_id=project.id,
-            upload_root_runs=upload_root_runs,
-            parent_type=ParentType.PLAN,
-            user_mappings=mappings['users']
-        )
-
-    with progress_recorder.progress_context('Creating results with plan as parent'):
-        mappings['results_parent_plan'] = creator.create_results(
-            backup['results_parent_plan'],
-            custom_fields_multi_select,
-            custom_fields_labels,
-            mappings['tests_parent_plan'],
-            mappings['users']
-        )
-
-    with progress_recorder.progress_context('Creating runs with mile as parent'):
-        mappings['tests_parent_mile'], mappings['runs_parent_mile'] = creator.create_runs(
-            runs=backup['runs_parent_mile'],
-            mapping=mappings['milestones'],
-            config_mappings=mappings['configs'],
-            tests=backup['tests_parent_mile'],
-            case_mappings=mappings['cases'],
-            project_id=project.id,
-            upload_root_runs=upload_root_runs,
-            parent_type=ParentType.MILESTONE,
-            user_mappings=mappings['users']
-        )
-
-    with progress_recorder.progress_context('Creating runs with mile as parent'):
-        mappings['results_parent_mile'] = creator.create_results(
-            backup['results_parent_mile'],
-            custom_fields_multi_select,
-            custom_fields_labels,
-            mappings['tests_parent_mile'],
-            mappings['users'],
-        )
-
-    mappings['attachments'] = {}
-    keys = [
-        ('cases', 'case_id', InstanceType.CASE),
-        ('plans', 'plan_id', InstanceType.PLAN),
-        ('runs_parent_plan', 'run_id', InstanceType.RUN),
-        ('runs_parent_mile', 'run_id', InstanceType.RUN),
-    ]
-
-    testrail_client = TestRailClient(TestrailConfig(**config_dict))
-
-    for key, parent_key, instance_type in keys:
-        with progress_recorder.progress_context(f'Creating attachments for {key}'):
-            file_attachments = testrail_client.get_attachments_from_list(backup['attachments'][key], parent_key)
-            mappings['attachments'].update(
-                creator.attachment_bulk_create(file_attachments, project, mappings['users'], parent_key,
-                                               mappings[key], instance_type)
+        with progress_recorder.progress_context('Creating runs with plan as parent'):
+            mappings['tests_parent_plan'], mappings['runs_parent_plan'] = creator.create_runs(
+                runs=backup['runs_parent_plan'],
+                mapping=mappings['plans'],
+                config_mappings=mappings['configs'],
+                tests=backup['tests_parent_plan'],
+                case_mappings=mappings['cases'],
+                project_id=project.id,
+                upload_root_runs=upload_root_runs,
+                parent_type=ParentType.PLAN,
+                user_mappings=mappings['users']
             )
 
-    keys = [
-        ('parent_plan', 'result_id', InstanceType.TEST),
-        ('parent_mile', 'result_id', InstanceType.TEST)
-    ]
-
-    for key, parent_key, instance_type in keys:
-        with progress_recorder.progress_context(f'Creating attachments for {key}'):
-            file_attachments = testrail_client.get_attachments_from_list(
-                backup['attachments'][f'tests_{key}'],
-                parent_key
-            )
-            mappings['attachments'].update(
-                creator.attachment_bulk_create(file_attachments, project, mappings['users'], parent_key,
-                                               mappings[f'results_{key}'], instance_type)
+        with progress_recorder.progress_context('Creating results with plan as parent'):
+            mappings['results_parent_plan'] = creator.create_results(
+                backup['results_parent_plan'],
+                custom_fields_multi_select,
+                custom_fields_labels,
+                mappings['tests_parent_plan'],
+                mappings['users']
             )
 
-    mappings_keys = [
-        ('cases', TestCase, MigratorService.case_update, ['scenario', 'setup']),
-        ('results_parent_mile', TestResult, TestResultService().result_update, ['comment']),
-        ('results_parent_plan', TestResult, TestResultService().result_update, ['comment']),
-    ]
-
-    for mapping_key, model_class, update_method, field_list in mappings_keys:
-        with progress_recorder.progress_context(f'Looking for attachments in fields of {mapping_key}'):
-            creator.update_testy_attachment_urls_async(
-                mappings[mapping_key],
-                model_class,
-                update_method,
-                field_list,
-                config_dict,
-                mappings['attachments']
+        with progress_recorder.progress_context('Creating runs with mile as parent'):
+            mappings['tests_parent_mile'], mappings['runs_parent_mile'] = creator.create_runs(
+                runs=backup['runs_parent_mile'],
+                mapping=mappings['milestones'],
+                config_mappings=mappings['configs'],
+                tests=backup['tests_parent_mile'],
+                case_mappings=mappings['cases'],
+                project_id=project.id,
+                upload_root_runs=upload_root_runs,
+                parent_type=ParentType.MILESTONE,
+                user_mappings=mappings['users']
             )
+
+        with progress_recorder.progress_context('Creating runs with mile as parent'):
+            mappings['results_parent_mile'] = creator.create_results(
+                backup['results_parent_mile'],
+                custom_fields_multi_select,
+                custom_fields_labels,
+                mappings['tests_parent_mile'],
+                mappings['users'],
+            )
+        if not backup.get('attachments'):
+            return
+        mappings['attachments'] = {}
+        keys = [
+            ('cases', 'case_id', InstanceType.CASE),
+            ('plans', 'plan_id', InstanceType.PLAN),
+            ('runs_parent_plan', 'run_id', InstanceType.RUN),
+            ('runs_parent_mile', 'run_id', InstanceType.RUN),
+        ]
+
+        testrail_client = TestRailClient(TestrailConfig(**config_dict))
+
+        for key, parent_key, instance_type in keys:
+            with progress_recorder.progress_context(f'Creating attachments for {key}'):
+                file_attachments = testrail_client.get_attachments_from_list(backup['attachments'][key], parent_key)
+                mappings['attachments'].update(
+                    creator.attachment_bulk_create(file_attachments, project, mappings['users'], parent_key,
+                                                   mappings[key], instance_type)
+                )
+
+        keys = [
+            ('parent_plan', 'result_id', InstanceType.TEST),
+            ('parent_mile', 'result_id', InstanceType.TEST)
+        ]
+
+        for key, parent_key, instance_type in keys:
+            with progress_recorder.progress_context(f'Creating attachments for {key}'):
+                file_attachments = testrail_client.get_attachments_from_list(
+                    backup['attachments'][f'tests_{key}'],
+                    parent_key
+                )
+                mappings['attachments'].update(
+                    creator.attachment_bulk_create(file_attachments, project, mappings['users'], parent_key,
+                                                   mappings[f'results_{key}'], instance_type)
+                )
+
+        mappings_keys = [
+            ('cases', TestCase, MigratorService.case_update, ['scenario', 'setup', 'description']),
+            ('results_parent_mile', TestResult, TestResultService().result_update, ['comment']),
+            ('results_parent_plan', TestResult, TestResultService().result_update, ['comment']),
+        ]
+
+        for mapping_key, model_class, update_method, field_list in mappings_keys:
+            with progress_recorder.progress_context(f'Looking for attachments in fields of {mapping_key}'):
+                creator.update_testy_attachment_urls_async(
+                    mappings[mapping_key],
+                    model_class,
+                    update_method,
+                    field_list,
+                    config_dict,
+                    mappings['attachments']
+                )
+    except Exception as err:
+        Project.objects.get(pk=project.id).delete()
+        raise err
 
 
 @shared_task(bind=True)
@@ -247,6 +253,117 @@ def download_task(self, project_id: int, config_dict: Dict, download_attachments
                 instance_type
             )
     print(f'SUMMARY OF STEPS {progress_recorder.current}')
+    save_results_to_redis(resulting_data, backup_filename)
+
+
+@shared_task(bind=True)
+def download_milestone_task(
+        self,
+        project_id: int,
+        replacement_project_name,
+        milestone_ids,
+        config_dict: Dict,
+        download_attachments,
+        ignore_completed,
+        backup_filename
+):
+    query_params = {'milestone_id': milestone_ids}
+    milestone_ids = [element.strip() for element in milestone_ids.split(',')]
+    resulting_data = {}
+    if ignore_completed:
+        query_params['is_completed'] = 0
+    progress_recorder = ProgressRecorderContext(self, total=14, description='Download started')
+    testrail_client = TestRailClient(TestrailConfig(**config_dict))
+    with progress_recorder.progress_context('Getting users'):
+        resulting_data['users'] = testrail_client.get_users()
+    with progress_recorder.progress_context('Getting custom fields for results '):
+        resulting_data['custom_result_fields'] = testrail_client.get_custom_result_fields()
+    with progress_recorder.progress_context('Getting configs'):
+        resulting_data['configs'] = testrail_client.get_configs(project_id)
+    with progress_recorder.progress_context('Getting project'):
+        if replacement_project_name:
+            resulting_data['project'] = {'name': replacement_project_name, 'announcement': ''}
+        else:
+            resulting_data['project'] = testrail_client.get_project(project_id)
+
+    with progress_recorder.progress_context('Getting milestones'):
+        resulting_data['milestones'] = []
+
+        for milestone_id in milestone_ids:
+            milestone = testrail_client.get_milestone(milestone_id)
+            if milestone['parent_id'] in milestone_ids:
+                continue
+            resulting_data['milestones'].append(milestone)
+    with progress_recorder.progress_context('Getting plans'):
+        resulting_data['plans'] = testrail_client.get_plans_with_runs(project_id, query_params)
+    with progress_recorder.progress_context('Getting runs'):
+        resulting_data['runs_parent_mile'] = testrail_client.get_runs(project_id, query_params)
+        for milestone in resulting_data['milestones']:
+            for child_milestone in milestone['milestones']:
+                query_params['milestone_id'] = child_milestone['id']
+                resulting_data['plans'].extend(testrail_client.get_plans_with_runs(project_id, query_params))
+                resulting_data['runs_parent_mile'].extend(testrail_client.get_runs(project_id, query_params))
+
+        resulting_data['runs_parent_plan'] = testrail_client.get_runs_from_plans(resulting_data['plans'])
+
+    with progress_recorder.progress_context('Getting suites'):
+        found_suite_ids = []
+        for key in ['runs_parent_plan', 'runs_parent_mile']:
+            for elem in resulting_data[key]:
+                found_suite_ids.append(elem['suite_id'])
+        found_suite_ids = set(found_suite_ids)
+        resulting_data['suites'] = []
+        for suite in testrail_client.get_suites(project_id):
+            if suite['id'] in found_suite_ids:
+                resulting_data['suites'].append(suite)
+
+    with progress_recorder.progress_context('Getting cases'):
+        resulting_data['cases'] = testrail_client.get_cases(project_id, resulting_data['suites'])
+    with progress_recorder.progress_context('Getting sections'):
+        resulting_data['sections'] = testrail_client.get_sections(project_id, resulting_data['suites'])
+    with progress_recorder.progress_context('Getting tests'):
+        resulting_data['tests_parent_plan'] = testrail_client.get_tests_for_runs(resulting_data['runs_parent_plan'])
+        resulting_data['tests_parent_mile'] = testrail_client.get_tests_for_runs(resulting_data['runs_parent_mile'])
+        found_cases = []
+
+        for key in ['tests_parent_plan', 'tests_parent_mile']:
+            for elem in resulting_data[key]:
+                found_cases.append(elem['case_id'])
+        found_cases = set(found_cases)
+        cases = []
+        for idx, case in enumerate(resulting_data['cases']):
+            if case['id'] in found_cases:
+                cases.append(case)
+        resulting_data['cases'] = cases
+
+    with progress_recorder.progress_context('Getting results'):
+        resulting_data['results_parent_plan'] = testrail_client.get_results_for_tests(
+            resulting_data['tests_parent_plan']
+        )
+        resulting_data['results_parent_mile'] = testrail_client.get_results_for_tests(
+            resulting_data['tests_parent_mile']
+        )
+
+    if not download_attachments:
+        save_results_to_redis(resulting_data, backup_filename)
+        return
+
+    with progress_recorder.progress_context('Getting attachments'):
+        keys_instance_type = [
+            ('cases', InstanceType.CASE),
+            ('plans', InstanceType.PLAN),
+            ('runs_parent_mile', InstanceType.RUN),
+            ('runs_parent_plan', InstanceType.RUN),
+            ('tests_parent_mile', InstanceType.TEST),
+            ('tests_parent_plan', InstanceType.TEST)
+        ]
+        resulting_data['attachments'] = {}
+
+        for key, instance_type in keys_instance_type:
+            resulting_data['attachments'][key] = testrail_client.get_attachments_for_instances(
+                resulting_data[key],
+                instance_type
+            )
     save_results_to_redis(resulting_data, backup_filename)
 
 

@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 // import MDEditor from '@uiw/react-md-editor';
-import {attachment, test, user} from "../models.interfaces";
+import {attachment, myCase, step, test, testStepResult, user} from "../models.interfaces";
 import Chip from "@mui/material/Chip";
 import FormControl from "@mui/material/FormControl";
 import Grid from "@mui/material/Grid";
@@ -26,6 +26,9 @@ import SuiteCaseService from "../../services/suite.case.service";
 import {MomentTMS} from "../../services/momentTMS";
 import i18next from "i18next";
 import {useMode} from "../../context/ColorModeContextProvider";
+import Collapse from "@mui/material/Collapse";
+import {KeyboardArrowDown} from "@mui/icons-material";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 interface Props {
     detailedTestInfo: { show: boolean, test: test };
@@ -50,6 +53,10 @@ const DetailedTestInfo: React.FC<Props> = ({
     const [estimate, setEstimate] = useState<number>()
     const [setup, setSetup] = useState<string>()
     const [teardown, setTeardown] = useState<string>()
+    const [isSteps, setIsSteps] = useState<boolean>()
+    const [steps, setSteps] = useState<step[]>([])
+    const [stepsStatus, setStepsStatus] = useState<number[]>([])
+    const [expanded, setExpanded] = useState<boolean[]>(Array(detailedTestInfo.test.test_results.length).fill(false))
     const [selectedStatus, setSelectedStatus] = useState<{ id: number, name: string } | null>(null)
     const [attachments, setAttachments] = React.useState<Map<number, attachment[]>>(new Map())
     const [filesSelected, setFilesSelected] = React.useState<File[]>()
@@ -99,6 +106,10 @@ const DetailedTestInfo: React.FC<Props> = ({
             setEstimate(response.data.estimate)
             setSetup(response.data.setup)
             setTeardown(response.data.teardown)
+            setIsSteps(response.data.is_steps)
+            setSteps(response.data.steps)
+            if (response.data.steps)
+                setStepsStatus(Array(response.data.steps.length).fill(-1))
         })
     }, [test.case])
 
@@ -115,15 +126,35 @@ const DetailedTestInfo: React.FC<Props> = ({
         setFilesSelected([])
     }
 
+    const onChangeStepStatus = (e: any, index: number) => {
+        setStepsStatus(stepsStatus.slice(0, index).concat([e.target.value.id], stepsStatus.slice(index + 1)))
+    }
+
+    const onExpand = (index: number) => {
+        setExpanded(expanded.slice(0, index).concat([!expanded[index]], expanded.slice(index + 1)))
+    }
+
     const createTestResult = () => {
         let statusId = selectedStatus ? selectedStatus.id : test.last_status_color.id
         // @ts-ignore
         let comment = editorRef.current.editorInst.getMarkdown()
+        const stepsResults: testStepResult[] = stepsStatus.map((status, index) => {
+            if (status < 0) {
+                return {
+                    step: steps[index].id
+                };
+            }
+            return {
+                step: steps[index].id,
+                status: status
+            };
+        })
         const testResult = {
             status: statusId,
             comment: comment ?? null,
             execution_time: num ? num : null,
-            test: test.id
+            test: test.id,
+            steps_results: stepsResults
         }
         TestPlanService.createTestResult(testResult).then((response) => {
             AttachmentService.postAttachments(filesSelected, response.data.id, 14).then(() =>
@@ -184,41 +215,41 @@ const DetailedTestInfo: React.FC<Props> = ({
                 </Grid>
             </Grid>
             {description &&
-            (<div>
-                <div className={classes.divBold}>
-                    {t("test_info.description")}
-                </div>
-                <div>
-                    <MDEditor.Markdown source={description} style={{whiteSpace: 'pre-wrap'}}/>
-                </div>
-            </div>)}
+                (<div>
+                    <div className={classes.divBold}>
+                        {t("test_info.description")}
+                    </div>
+                    <div>
+                        <MDEditor.Markdown source={description} style={{whiteSpace: 'pre-wrap'}}/>
+                    </div>
+                </div>)}
             {setup &&
-            (<div>
-                <div className={classes.divBold}>
-                    {t("test_info.setup")}
-                </div>
-                <div>
-                    <MDEditor.Markdown source={setup} style={{whiteSpace: 'pre-wrap'}}/>
-                </div>
-            </div>)}
+                (<div>
+                    <div className={classes.divBold}>
+                        {t("test_info.setup")}
+                    </div>
+                    <div>
+                        <MDEditor.Markdown source={setup} style={{whiteSpace: 'pre-wrap'}}/>
+                    </div>
+                </div>)}
             {teardown &&
-            (<div>
-                <div className={classes.divBold}>
-                    {t("test_info.teardown")}
-                </div>
-                <div>
-                    <MDEditor.Markdown source={teardown} style={{whiteSpace: 'pre-wrap'}}/>
-                </div>
-            </div>)}
+                (<div>
+                    <div className={classes.divBold}>
+                        {t("test_info.teardown")}
+                    </div>
+                    <div>
+                        <MDEditor.Markdown source={teardown} style={{whiteSpace: 'pre-wrap'}}/>
+                    </div>
+                </div>)}
             {estimate &&
-            (<Grid container spacing={2}>
-                <Grid item sx={{fontWeight: 'bold'}}>
-                    {t("test_info.estimate")}
-                </Grid>
-                <Grid item>
-                    <MDEditor.Markdown source={estimate.toString()} style={{whiteSpace: 'pre-wrap'}}/>
-                </Grid>
-            </Grid>)}
+                (<Grid container spacing={2}>
+                    <Grid item sx={{fontWeight: 'bold'}}>
+                        {t("test_info.estimate")}
+                    </Grid>
+                    <Grid item>
+                        <MDEditor.Markdown source={estimate.toString()} style={{whiteSpace: 'pre-wrap'}}/>
+                    </Grid>
+                </Grid>)}
 
             <div className={classes.divBold}>
                 {t("test_info.description")}
@@ -227,34 +258,78 @@ const DetailedTestInfo: React.FC<Props> = ({
                 <MDEditor.Markdown source={scenario} style={{whiteSpace: 'pre-wrap'}}/>
             </div>
 
-            <Grid container spacing={1}>
-                <Grid item sx={{fontWeight: 'bold', paddingTop: 0}}>
-                    {t("test_info.result")}
-                </Grid>
-                {showEnterResult ?
-                    <Grid item>
-                        <FormControl size="small">
-                            <Select
-                                value={selectedStatus ? selectedStatus.name : test.last_status_color.name}
-                                onChange={(e) => chooseStatus(e)}
-                                autoFocus={true}
-                                renderValue={(selected) => <Grid>{selected}</Grid>}>
-                                {statuses.map((status, index) => <MenuItem key={index}
-                                                                           value={status as any}>{status.name}</MenuItem>)}
-                            </Select>
-                        </FormControl>
+            <Grid direction={"column"} container spacing={1}>
+                <div>
+                    <Grid item sx={{fontWeight: 'bold', paddingTop: 0}}>
+                        {t("test_info.test_result")}
                     </Grid>
-                    :
-                    <Grid item>
-                        <Chip label={test.last_status_color.name}
-                              sx={{
-                                  margin: "3px",
-                                  maxWidth: "95%",
-                                  backgroundColor: theme.palette[test.last_status_color.name.toLowerCase()],
-                                  color: "white"
-                              }}/>
-                    </Grid>}
+                    {showEnterResult ?
+                        <Grid item>
+                            <FormControl size="small">
+                                <Select
+                                    value={selectedStatus ? selectedStatus.name : test.last_status_color.name}
+                                    onChange={(e) => chooseStatus(e)}
+                                    autoFocus={true}
+                                    renderValue={(selected) => <Grid>{selected}</Grid>}>
+                                    {statuses.map((status, index) => <MenuItem key={index}
+                                                                               value={status as any}>{status.name}</MenuItem>)}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        :
+                        <Grid item>
+                            <Chip label={test.last_status_color.name}
+                                  sx={{
+                                      margin: "3px",
+                                      maxWidth: "95%",
+                                      backgroundColor: theme.palette[test.last_status_color.name.toLowerCase()],
+                                      color: "white"
+                                  }}/>
+                        </Grid>}
+                </div>
 
+
+                {isSteps &&
+                    <div>
+                        <Typography style={{marginTop: "20px", fontWeight: 'bold', paddingTop: 0}}>
+                            {t("test_info.steps_results")}
+                        </Typography>
+                        {steps?.map((step, index) => {
+                            const curStepStatusId = test.test_results[0].steps_results.find((res) => res.step == step.id)?.status ?? 5
+                            const curStatus = statuses.find((status) => status.id == curStepStatusId)
+
+
+                            return <div style={{margin: "10px 10px 10px 10px"}}>
+                                <Grid item sx={{fontWeight: 'bold', paddingTop: 0}}>
+                                    {step.name + ":"}
+                                </Grid>
+                                {showEnterResult ?
+                                    <Grid item>
+                                        <FormControl size="small">
+                                            <Select
+                                                value={statuses.find((status) => status.id == stepsStatus[index])?.name ?? curStatus?.name}
+                                                onChange={(e) => onChangeStepStatus(e, index)}
+                                                autoFocus={true}
+                                                renderValue={(selected) => <Grid>{selected}</Grid>}>
+                                                {statuses.map((status, index) => <MenuItem key={index}
+                                                                                           value={status as any}>{status.name}</MenuItem>)}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    :
+                                    <Grid item>
+                                        <Chip label={curStatus?.name}
+                                              sx={{
+                                                  margin: "3px",
+                                                  maxWidth: "95%",
+                                                  backgroundColor: theme.palette[curStatus?.name.toLowerCase() ?? "untested"],
+                                                  color: "white"
+                                              }}/>
+                                    </Grid>}
+                            </div>
+                        })}
+                    </div>
+                }
             </Grid>
             {showEnterResult && (
                 <div>
@@ -348,47 +423,79 @@ const DetailedTestInfo: React.FC<Props> = ({
                 </Button>}
             </Grid>
             {test.test_results.length !== 0 &&
-            (<div>
-                <div className={classes.divBold}>
-                    {t("test_info.previous_results")}
-                </div>
-                <table>
-                    <tbody>
-                    {test.test_results.map((testResult, index) =>
-                        <tr key={index}>
-                            <TableCell sx={{maxWidth: "max-content", paddingTop: 0}}>
-                                <div>
-                                    <Grid item>
-                                        <Chip label={testResult.status_color.name}
-                                              sx={{
-                                                  margin: "3px",
-                                                  maxWidth: "95%",
-                                                  backgroundColor: theme.palette[test.last_status_color.name.toLowerCase()],
-                                                  color: "white"
-                                              }}/>
-                                    </Grid>
-                                    <Grid item>
-                                        {momentTMS(testResult.updated_at).format('L LT')}
-                                    </Grid>
-                                    <Grid item sx={{fontWeight: 'bold', wordBreak: "break-word"}}>
-                                        {names.get(testResult.id) ?? ""}
-                                    </Grid>
+                (<div>
+                    <div className={classes.divBold}>
+                        {t("test_info.previous_results")}
+                    </div>
+                    <table>
+                        <tbody>
+                        {test.test_results.map((testResult, index) =>
+                            <tr key={index}>
+                                <TableCell sx={{maxWidth: "max-content", paddingTop: 0}}>
+                                    <div>
+                                        <Grid item sx={{fontWeight: 'bold'}}>
+                                            {t("test_info.test_result")}
+                                            <Chip label={testResult.status_color.name}
+                                                  sx={{
+                                                      margin: "3px",
+                                                      maxWidth: "95%",
+                                                      backgroundColor: theme.palette[testResult.status_color.name.toLowerCase()],
+                                                      color: "white"
+                                                  }}/>
+                                        </Grid>
+                                        {testResult.steps_results.length != 0 ?
+                                            <Grid item sx={{fontWeight: 'bold'}}>
+                                                {t("test_info.steps_results")}
+                                                <IconButton data-cy="project-creation" onClick={() => onExpand(index)}>
+                                                    <ArrowDropDownIcon style={{opacity: expanded ? 0 : 1}}/>
+                                                    <KeyboardArrowDown style={{
+                                                        marginLeft: -24,
+                                                        opacity: expanded ? 1 : 0,
+                                                        transition: '0.2s',
+                                                    }}/>
+                                                </IconButton>
+                                                <Collapse in={expanded[index]}>
+                                                    {testResult.steps_results.map((res) => {
+                                                        const stepStatus = statuses.find((stat) => stat.id == res.status)
+                                                        if (!stepStatus)
+                                                            return
 
-                                </div>
-                            </TableCell>
+                                                        return <Grid item style={{marginLeft: "30px"}}>
+                                                            {res.name}:
+                                                            <Chip label={stepStatus.name}
+                                                                  sx={{
+                                                                      margin: "3px",
+                                                                      maxWidth: "95%",
+                                                                      backgroundColor: theme.palette[stepStatus.name.toLowerCase()],
+                                                                      color: "white"
+                                                                  }}/>
+                                                        </Grid>
+                                                    })}
+                                                </Collapse>
+                                            </Grid>
+                                            : <></>}
+                                        <Grid item>
+                                            {momentTMS(testResult.updated_at).format('L LT')}
+                                        </Grid>
+                                        <Grid item sx={{fontWeight: 'bold', wordBreak: "break-word"}}>
+                                            {names.get(testResult.id) ?? ""}
+                                        </Grid>
 
-                            <TableCell align="left" sx={{verticalAlign: 'top', paddingTop: "9px"}}>
-                                <div className={classes.divBold}>
-                                    {t("test_info.comment")}
-                                </div>
-                                <MDEditor.Markdown source={testResult?.comment} style={{whiteSpace: 'pre-wrap'}}/>
-                                <Attachments attachments={attachments.get(testResult.id)}/>
-                            </TableCell>
-                        </tr>
-                    )}
-                    </tbody>
-                </table>
-            </div>)}
+                                    </div>
+                                </TableCell>
+
+                                <TableCell align="left" sx={{verticalAlign: 'top', paddingTop: "9px"}}>
+                                    <div className={classes.divBold}>
+                                        {t("test_info.comment")}
+                                    </div>
+                                    <MDEditor.Markdown source={testResult?.comment} style={{whiteSpace: 'pre-wrap'}}/>
+                                    <Attachments attachments={attachments.get(testResult.id)}/>
+                                </TableCell>
+                            </tr>
+                        )}
+                        </tbody>
+                    </table>
+                </div>)}
         </div>
     )
 }

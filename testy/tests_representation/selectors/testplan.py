@@ -34,15 +34,44 @@ from typing import Optional
 
 from django.db import connection
 from django.db.models import QuerySet
+from mptt.querysets import TreeQuerySet
 from tests_representation.choices import TestStatuses
-from tests_representation.models import TestPlan
+from tests_representation.models import Parameter, TestPlan
+
+from testy.selectors import MPTTSelector
+from utils import form_tree_prefetch_objects
 
 logger = logging.getLogger(__name__)
 
 
 class TestPlanSelector:
-    def testplan_list(self) -> QuerySet[TestPlan]:
+    def _get_max_level(self) -> int:
+        return MPTTSelector.model_max_level(TestPlan)
+
+    @staticmethod
+    def testplan_list_raw() -> QuerySet[TestPlan]:
         return TestPlan.objects.all()
+
+    def testplan_list(self, is_archive: bool = False) -> QuerySet[TestPlan]:
+        max_level = self._get_max_level()
+        testplan_prefetch_objects = form_tree_prefetch_objects(
+            nested_prefetch_field='child_test_plans',
+            prefetch_field='child_test_plans',
+            tree_depth=max_level,
+            queryset_class=TestPlan,
+            queryset_filter=None if is_archive else {'is_archive': False}
+        )
+        testplan_prefetch_objects.extend(
+            form_tree_prefetch_objects(
+                nested_prefetch_field='child_test_plans',
+                prefetch_field='parameters',
+                tree_depth=max_level,
+                queryset_class=Parameter
+            )
+        )
+        return TestPlan.objects.all().prefetch_related(
+            *testplan_prefetch_objects
+        )
 
     def testplan_project_root_list(self, project_id: int) -> QuerySet[TestPlan]:
         return QuerySet(model=TestPlan).filter(project=project_id, parent=None).order_by('name')
@@ -50,8 +79,32 @@ class TestPlanSelector:
     def testplan_get_by_pk(self, pk) -> Optional[TestPlan]:
         return TestPlan.objects.get(pk=pk)
 
-    def testplan_without_parent(self) -> QuerySet[TestPlan]:
-        return QuerySet(model=TestPlan).filter(parent=None).order_by('name')
+    def testplan_without_parent(self, is_archive: bool = False, children_ordering: str = None) -> QuerySet[TestPlan]:
+        max_level = self._get_max_level()
+        children_ordering = ['-started_at'] if not children_ordering else children_ordering.split(',')
+        testplan_prefetch_objects = form_tree_prefetch_objects(
+            nested_prefetch_field='child_test_plans',
+            prefetch_field='child_test_plans',
+            tree_depth=max_level,
+            queryset_class=TestPlan,
+            queryset_filter=None if is_archive else {'is_archive': False},
+            order_by_fields=children_ordering
+        )
+        testplan_prefetch_objects.extend(
+            form_tree_prefetch_objects(
+                nested_prefetch_field='child_test_plans',
+                prefetch_field='parameters',
+                tree_depth=max_level,
+                queryset_class=Parameter,
+            )
+        )
+        return QuerySet(model=TestPlan).filter(parent=None).order_by('-created_at').prefetch_related(
+            *testplan_prefetch_objects,
+        )
+
+    @staticmethod
+    def testplan_list_ancestors(instance: TestPlan) -> TreeQuerySet[TestPlan]:
+        return instance.get_ancestors(include_self=True).prefetch_related('parameters')
 
     def testplan_statistics(self, test_plan):
         test_plan_child_ids = tuple(test_plan.get_descendants(include_self=True).values_list('pk', flat=True))

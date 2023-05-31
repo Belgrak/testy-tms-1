@@ -16,4 +16,6 @@ COPY . /testy
 
 RUN pip install -r requirements/requirements.txt
 RUN pip install -e plugins/migrator
+RUN pip install -e plugins/allure_uploader
+RUN pip install -e plugins/dita_generator
 

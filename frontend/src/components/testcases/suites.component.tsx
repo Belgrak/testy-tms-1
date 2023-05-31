@@ -114,7 +114,18 @@ const SuitesComponent = () => {
             setSelectedSuiteForTreeView(treeSuites.find(suite => suite.id === parseInt(selectedSuiteId)))
         } else if (selectedSuiteId !== undefined) {
             SuiteCaseService.getTreeBySetSuite(parseInt(selectedSuiteId)).then((response) => {
-                setSelectedSuiteForTreeView(response.data)
+                const t: treeSuite[] = response.data
+                // t.forEach((treeSuite, index) => {
+                //     SuiteCaseService.getCases(treeSuite.id).then((response) => {
+                //         t[index].test_cases = response.data
+                //         setSelectedSuiteForTreeView(t)
+                //     })
+                // })
+                SuiteCaseService.getCases(t[0].id).then((response) => {
+                    console.log(t)
+                    t[0].test_cases = response.data
+                    setSelectedSuiteForTreeView(t[0])
+                })
             }).catch((e) => {
                 if (e.response.status === 404) {
                     navigate("/testcases")
@@ -161,6 +172,7 @@ const SuitesComponent = () => {
         },
     };
 
+    // console.log(selectedSuiteForTreeView)
     return (
         <div className={classes.mainGrid}>
             <div className={classes.leftGrid}>

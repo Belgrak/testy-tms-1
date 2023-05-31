@@ -42,7 +42,7 @@ const Settings: React.FC = () => {
     return <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
             <CssBaseline/>
-            <Typography color={"darkorange"} component={"h3"}>{t("settings.coming_soon")}</Typography>
+            {/*<Typography color={"darkorange"} component={"h3"}>{t("settings.coming_soon")}</Typography>*/}
             <form
                 style={{
                     display: 'flex',
@@ -52,6 +52,9 @@ const Settings: React.FC = () => {
                     minWidth: 200
                 }}
                 onSubmit={handleOnSubmit}>
+                <div style={{fontWeight: 500}}>
+                    {theme.palette.mode === 'dark' ? t("settings.light") : t("settings.dark")} {t("settings.theme")}
+                </div>
                 <Tooltip title={(theme.palette.mode == "dark" ? "Light" : "Dark") + " mode"}>
                     <IconButton sx={{ml: 1}} onClick={changeMode} color="inherit">
                         {theme.palette.mode === 'dark' ? <LightModeIcon/> : <DarkModeIcon/>}

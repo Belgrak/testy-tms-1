@@ -28,17 +28,19 @@
 # if any, to sign a "copyright disclaimer" for the program, if necessary.
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
+from django.contrib.auth import get_user_model
 from django.db import models
+
+UserModel = get_user_model()
 
 
 class TestrailSettings(models.Model):
-    login = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)
-    api_url = models.CharField(max_length=255)
+    verbose_name = models.CharField(max_length=255)
+    testrail_api_url = models.CharField(max_length=255)
     testy_attachments_url = models.CharField(max_length=255)
 
     def __str__(self) -> str:
-        return self.login
+        return self.verbose_name
 
 
 class TestrailBackup(models.Model):

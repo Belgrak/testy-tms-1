@@ -34,7 +34,7 @@ from typing import Any, Dict
 from core.services.attachments import AttachmentService
 from django.db import transaction
 from tests_description.selectors.cases import TestCaseSelector
-from tests_representation.models import TestResult
+from tests_representation.models import TestResult, TestStepResult
 from users.models import User
 
 
@@ -42,6 +42,8 @@ class TestResultService:
     non_side_effect_fields = [
         'status', 'user', 'test', 'comment', 'is_archive', 'test_case_version', 'execution_time', 'attributes'
     ]
+
+    step_non_side_effect_fields = ['test_result', 'step', 'status', 'project']
 
     @transaction.atomic
     def result_create(self, data: Dict[str, Any], user: User) -> TestResult:
@@ -59,6 +61,14 @@ class TestResultService:
         for attachment in data.get('attachments', []):
             AttachmentService().attachment_set_content_object(attachment, test_result)
 
+        for steps_results in data.get('steps_results', []):
+            steps_results['test_result'] = test_result
+            steps_results['project'] = test_result.project
+            TestStepResult.model_create(
+                fields=self.step_non_side_effect_fields,
+                data=steps_results
+            )
+
         return test_result
 
     @transaction.atomic
@@ -75,5 +85,12 @@ class TestResultService:
         test_result.save()
 
         AttachmentService().attachments_update_content_object(data.get('attachments', []), test_result)
+
+        for step_result_data in data.get('steps_results', []):
+            step_result = TestStepResult.objects.get(pk=step_result_data['id'])
+            step_result.model_update(
+                fields=self.step_non_side_effect_fields,
+                data=step_result_data
+            )
 
         return test_result

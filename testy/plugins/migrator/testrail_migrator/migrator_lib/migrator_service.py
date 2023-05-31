@@ -81,9 +81,10 @@ class MigratorService:
 
     @staticmethod
     def cases_bulk_create(data_list):
-        non_side_effect_fields = TestCaseService.non_side_effect_fields
+        non_side_effect_fields = TestCaseService.case_non_side_effect_fields
         cases = []
         for data in data_list:
+            data['is_steps'] = False
             case = TestCase.model_create(fields=non_side_effect_fields, data=data, commit=False)
             case.updated_at = datetime.fromtimestamp(data['updated_at'], tz=pytz.UTC)
             case.created_at = datetime.fromtimestamp(data['created_at'], tz=pytz.UTC)
@@ -94,7 +95,7 @@ class MigratorService:
 
     @staticmethod
     def case_update(case: TestCase, data) -> TestCase:
-        non_side_effect_fields = TestCaseService.non_side_effect_fields
+        non_side_effect_fields = TestCaseService.case_non_side_effect_fields
         case, _ = case.model_update(
             fields=non_side_effect_fields,
             data=data,
@@ -108,15 +109,16 @@ class MigratorService:
                       data_list]
         return Parameter.objects.bulk_create(parameters)
 
-    # @staticmethod
     def testplan_bulk_create_with_tests(self, data_list):
-        testplan_objects = []
+        test_plans = []
         for data in data_list:
-            parameters = data.get('parameters')
-            testplan_objects.append(
-                self.make_testplan_model(data, parameters=parameters if parameters else None)
+            parameters = data.get('parameters', [])
+            test_plans.append(
+                self.make_testplan_model(
+                    data,
+                    parameters=[Parameter.objects.get(pk=parameter) for parameter in parameters]
+                )
             )
-        test_plans = TestPlan.objects.bulk_create(testplan_objects)
         TestPlan.objects.rebuild()
         created_tests = []
         for test_plan, data in zip(test_plans, data_list):
@@ -146,10 +148,9 @@ class MigratorService:
         return test_result
 
     def testplan_bulk_create(self, validated_data):
-        testplan_objects = []
+        test_plans = []
         for data in validated_data:
-            testplan_objects.append(self.make_testplan_model(data))
-        test_plans = TestPlan.objects.bulk_create(testplan_objects)
+            test_plans.append(self.make_testplan_model(data))
         TestPlan.objects.rebuild()
 
         return test_plans
@@ -199,7 +200,8 @@ class MigratorService:
         testplan.tree_id = 0
         testplan.level = 0
 
-        if parameters is not None:
-            testplan.parameters = parameters
+        testplan.save()
+        if parameters:
+            testplan.parameters.set(parameters)
 
         return testplan

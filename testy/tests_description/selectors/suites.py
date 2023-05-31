@@ -29,42 +29,83 @@
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
 
-from django.db.models import QuerySet
-from tests_description.models import TestSuite
+from django.db.models import Count, QuerySet
+from mptt.querysets import TreeQuerySet
+from tests_description.models import TestCase, TestSuite
 
 from testy.selectors import MPTTSelector
-from utils import form_tree_prefetch_query
+from utils import form_tree_prefetch_lookups, form_tree_prefetch_objects
 
 
 class TestSuiteSelector:
+    def _get_max_level(self) -> int:
+        return MPTTSelector.model_max_level(TestSuite)
+
+    @staticmethod
+    def suite_list_raw() -> QuerySet[TestSuite]:
+        return TestSuite.objects.all()
+
     def suite_list(self) -> QuerySet[TestSuite]:
+        max_level = self._get_max_level()
         return (
             TestSuite.objects.all()
             .order_by("name")
             .prefetch_related(
-                *form_tree_prefetch_query(
-                    "child_test_suites",
-                    "test_cases",
-                    MPTTSelector.model_max_level(TestSuite),
-                )
+                *form_tree_prefetch_lookups(
+                    'child_test_suites',
+                    'test_cases',
+                    max_level,
+                ),
+                *form_tree_prefetch_lookups(
+                    'child_test_suites',
+                    'test_cases__attachments',
+                    max_level,
+                ),
             )
         )
 
-    def suite_without_parent(self) -> QuerySet[TestSuite]:
+    def suite_list_treeview(self, root_only: bool = True) -> QuerySet[TestSuite]:
+        max_level = self._get_max_level()
+        parent = {'parent': None} if root_only else {}
         return (
             QuerySet(model=TestSuite)
-            .filter(parent=None)
-            .order_by("name")
+            .filter(**parent)
+            .order_by('name')
             .prefetch_related(
-                *form_tree_prefetch_query(
-                    "child_test_suites",
-                    "child_test_suites",
-                    MPTTSelector.model_max_level(TestSuite),
-                ),
-                *form_tree_prefetch_query(
-                    "child_test_suites",
-                    "test_cases",
-                    MPTTSelector.model_max_level(TestSuite),
+                *form_tree_prefetch_objects(
+                    nested_prefetch_field='child_test_suites',
+                    prefetch_field='child_test_suites',
+                    tree_depth=max_level,
+                    queryset_class=TestSuite,
+                    annotation={'cases_count': Count('test_cases')}
                 )
-            )
+            ).annotate(cases_count=Count('test_cases'))
         )
+
+    def suite_list_treeview_with_cases(self, root_only: bool = True) -> QuerySet[TestSuite]:
+        max_level = self._get_max_level()
+        parent = {'parent': None} if root_only else {}
+        return (
+            QuerySet(model=TestSuite)
+            .filter(**parent)
+            .order_by('name')
+            .prefetch_related(
+                *form_tree_prefetch_objects(
+                    nested_prefetch_field='child_test_suites',
+                    prefetch_field='child_test_suites',
+                    tree_depth=max_level,
+                    queryset_class=TestSuite,
+                    annotation={'cases_count': Count('test_cases')}
+                ),
+                *form_tree_prefetch_objects(
+                    nested_prefetch_field='child_test_suites',
+                    prefetch_field='test_cases',
+                    tree_depth=max_level,
+                    queryset_class=TestCase,
+                ),
+            ).annotate(cases_count=Count('test_cases'))
+        )
+
+    @staticmethod
+    def suite_list_ancestors(instance: TestSuite) -> TreeQuerySet[TestSuite]:
+        return instance.get_ancestors(include_self=True)

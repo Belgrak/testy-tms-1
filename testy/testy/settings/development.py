@@ -44,6 +44,8 @@ INTERNAL_IPS = [
     '127.0.0.1',
 ]
 
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
 MIDDLEWARE += [  # noqa F405
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]

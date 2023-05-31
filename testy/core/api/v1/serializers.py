@@ -32,7 +32,7 @@ import humanize
 from core.models import Attachment, Project
 from django.urls import reverse
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import SerializerMethodField
+from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.serializers import HyperlinkedIdentityField, ModelSerializer
 
 __all__ = (
@@ -46,6 +46,21 @@ class ProjectSerializer(ModelSerializer):
     class Meta:
         model = Project
         fields = ('id', 'url', 'name', 'description', 'is_archive')
+
+
+class ProjectStatisticsSerializer(ModelSerializer):
+    url = HyperlinkedIdentityField(view_name='api:v1:project-detail')
+    cases_count = IntegerField()
+    suites_count = IntegerField()
+    plans_count = IntegerField()
+    tests_count = IntegerField()
+
+    class Meta:
+        model = Project
+        fields = (
+            'id', 'url', 'name', 'description', 'is_archive', 'cases_count', 'suites_count', 'plans_count',
+            'tests_count'
+        )
 
 
 class AttachmentSerializer(ModelSerializer):

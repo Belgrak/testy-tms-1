@@ -46,8 +46,8 @@ class TestPlanEndpoints:
     view_name_list = 'api:v1:testplan-list'
 
     def test_list(self, api_client, authorized_superuser, several_test_plans_from_api):
-        expected_instances = several_test_plans_from_api
-        response = api_client.send_request(self.view_name_list)
+        expected_instances, project_id = several_test_plans_from_api
+        response = api_client.send_request(self.view_name_list, query_params={'project': project_id})
 
         for instance_dict in json.loads(response.content):
             assert instance_dict in expected_instances, f'{instance_dict} was not found in expected instances.'

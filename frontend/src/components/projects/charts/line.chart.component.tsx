@@ -1,16 +1,16 @@
 import React, {useMemo} from 'react';
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
-import {test} from "../../models.interfaces";
+import {testResult} from "../../models.interfaces";
 import {statuses} from "../../model.statuses";
 import {MomentTMS} from "../../../services/momentTMS";
 import {useMode} from "../../../context/ColorModeContextProvider";
 
 const LineChartComponent = (props: {
-    tests: test[]
+    testResults: testResult[]
 }) => {
     const [, theme] = useMode();
     const momentTMS = MomentTMS.initWithFormat;
-    const sliceOfTests = props.tests.slice(0, 100).sort((a, b) =>
+    const sliceOfResults = props.testResults.slice(0, 100).sort((a, b) =>
         momentTMS(a.updated_at).valueOf() - momentTMS(b.updated_at).valueOf())
     const result: { [key: string]: number; }[] = []
     const dates: string[] = []
@@ -19,16 +19,17 @@ const LineChartComponent = (props: {
     // Joining date and statuses for creating data for line chart
     const lineData = useMemo(() => {
         // Filling lists with date and results statuses on that date
-        sliceOfTests.forEach((test) => {
-            const testDate = momentTMS(test.updated_at).format("L")
+        sliceOfResults.forEach((testResult) => {
+            const testDate = momentTMS(testResult.updated_at).format("L")
+
             if (dates[dates.length - 1] !== testDate) {
                 const currentResult: { [key: string]: number; } = {}
                 statuses.map((status) => currentResult[status.name.toLowerCase()] = 0)
-                currentResult[String(test.last_status).toLowerCase()]++
+                currentResult[testResult.status_text.toLowerCase()]++
                 result.push(currentResult)
                 dates.push(testDate)
             } else {
-                result[result.length - 1][String(test.last_status).toLowerCase()]++
+                result[result.length - 1][testResult.status_text.toLowerCase()]++
             }
         })
 
@@ -40,7 +41,7 @@ const LineChartComponent = (props: {
                 return dateData
             }
         )
-    }, [])
+    }, [sliceOfResults])
 
 
     return (
@@ -48,7 +49,7 @@ const LineChartComponent = (props: {
             <LineChart data={lineData}>
                 <CartesianGrid/>
                 <XAxis dataKey="name"/>
-                <YAxis/>
+                <YAxis allowDecimals={false}/>
                 <Tooltip/>
                 <Legend/>
                 {statuses.map((status, index) =>

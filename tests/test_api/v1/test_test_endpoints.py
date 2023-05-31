@@ -31,9 +31,11 @@
 
 import json
 from http import HTTPStatus
+from operator import itemgetter
 
 import pytest
 from tests_representation.api.v1.serializers import TestSerializer
+from tests_representation.choices import TestStatuses
 from tests_representation.models import Test
 
 from tests import constants
@@ -46,14 +48,14 @@ class TestTestEndpoints:
     view_name_list = 'api:v1:test-list'
     view_name_detail = 'api:v1:test-detail'
 
-    def test_list(self, api_client, authorized_superuser, test_factory):
+    def test_list(self, api_client, authorized_superuser, test_factory, project):
         expected_instances = model_to_dict_via_serializer(
-            [test_factory() for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE)],
+            [test_factory(project=project) for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE)],
             TestSerializer,
             many=True
         )
-        response = api_client.send_request(self.view_name_list)
-        for instance_dict in json.loads(response.content):
+        response = api_client.send_request(self.view_name_list, query_params={'project': project.id})
+        for instance_dict in json.loads(response.content)['results']:
             assert instance_dict in expected_instances, f'{instance_dict} was not found in expected instances.'
 
     def test_retrieve(self, api_client, authorized_superuser, test):
@@ -124,3 +126,102 @@ class TestTestEndpoints:
             data={}
         )
         assert json.loads(response.content)['detail'] == PERMISSION_ERR_MSG
+
+    @pytest.mark.parametrize('field_name', ['id', 'name', 'is_archive', 'last_status'])
+    @pytest.mark.parametrize('descending', [True, False], ids=['desc', 'asc'])
+    def test_ordering_pagination(self, api_client, authorized_superuser, test_factory, test_result_factory, field_name,
+                                 descending, project):
+        number_of_pages = 2
+        number_of_objects = constants.NUMBER_OF_OBJECTS_TO_CREATE_PAGE * number_of_pages
+        tests = [test_factory(is_archive=idx % 2, project=project) for idx in range(number_of_objects)]
+        for idx, expected_instance in enumerate(tests):
+            if idx % 2:
+                test_result_factory(test=expected_instance, status=TestStatuses.FAILED)
+            elif idx % 3:
+                test_result_factory(test=expected_instance, status=TestStatuses.SKIPPED)
+            else:
+                test_result_factory(test=expected_instance, status=TestStatuses.PASSED)
+        expected_instances = model_to_dict_via_serializer(
+            tests,
+            TestSerializer,
+            many=True
+        )
+
+        expected_instances = sorted(
+            expected_instances,
+            key=itemgetter(field_name),
+            reverse=descending
+        )
+
+        for page_number in range(1, number_of_pages + 1):
+            response = api_client.send_request(
+                self.view_name_list,
+                query_params={
+                    'ordering': f'{"-" if descending else ""}{field_name if field_name != "name" else "case_name"}',
+                    'is_archive': True,
+                    'page': page_number,
+                    'project': project.id
+                }
+            )
+            response_dict = json.loads(response.content)['results']
+
+            assert len(response_dict) == constants.NUMBER_OF_OBJECTS_TO_CREATE_PAGE
+            for expected_instance, actual_instance in zip(
+                    expected_instances[:99] if page_number == 1 else expected_instances[100:],
+                    json.loads(response.content)['results']
+            ):
+                assert expected_instance[field_name] == actual_instance[field_name]
+
+    def test_search(self, api_client, authorized_superuser, test_factory, test_case_factory, project):
+        number_of_cases = 2
+        test_cases = [test_case_factory(), test_case_factory()]
+        tests = [[], []]
+        expected_instances = []
+        for idx in range(constants.NUMBER_OF_OBJECTS_TO_CREATE):
+            if idx % 2:
+                tests[0].append(test_factory(case=test_cases[0], project=project))
+            else:
+                tests[1].append(test_factory(case=test_cases[1], project=project))
+
+        for idx in range(number_of_cases):
+            expected_instances.append(model_to_dict_via_serializer(tests[idx], TestSerializer, many=True))
+
+        for idx in range(number_of_cases):
+            response = api_client.send_request(
+                self.view_name_list,
+                query_params={
+                    'search': test_cases[idx].name,
+                    'is_archive': True,
+                    'project': project.id
+                }
+            )
+            response_dict = json.loads(response.content)['results']
+            assert expected_instances[idx] == response_dict
+
+    def test_last_status_filter(self, api_client, authorized_superuser, test_factory, test_result_factory, project):
+        expected_instances = []
+        for status in TestStatuses:
+            test = test_factory(project=project)
+            test_result_factory(test=test, status=status)
+            expected_instances.append(model_to_dict_via_serializer([test], TestSerializer, many=False))
+
+        for expected_instance, status in zip(expected_instances, TestStatuses):
+            response = api_client.send_request(
+                self.view_name_list,
+                query_params={
+                    'last_status': status.value,
+                    'project': project.id
+                }
+            )
+            assert [expected_instance] == json.loads(response.content)['results'], f'Filter by {status} unexpected json'
+
+    @pytest.mark.parametrize('page_size', [1, 2, 5])
+    def test_page_size(self, api_client, authorized_superuser, test_factory, page_size, project):
+        expected_number_of_pages = constants.NUMBER_OF_OBJECTS_TO_CREATE // page_size
+        for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE):
+            test_factory(project=project)
+        response = api_client.send_request(
+            self.view_name_list,
+            query_params={'page_size': page_size, 'project': project.id}
+        )
+        assert expected_number_of_pages == json.loads(response.content)['pages']['total']

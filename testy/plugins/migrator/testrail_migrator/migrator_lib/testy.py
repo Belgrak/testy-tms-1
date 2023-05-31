@@ -71,8 +71,8 @@ class TestyCreator:
         self.service_user = UserModel.objects.get(username=service_login)
         self.replace_pattern = replace_pattern
         if not testy_attachment_url:
-            logging.error('Testy attachment url was not provided')
-        self.testy_attachment_url = testy_attachment_url
+            logging.warning('Testy attachment url was not provided')
+        self.testy_attachment_url = testy_attachment_url + '/'
         self.default_root_section_name = default_root_section_name
 
     async def replace_testrail_attachment_url(self, text_to_check, attachments_mapping,

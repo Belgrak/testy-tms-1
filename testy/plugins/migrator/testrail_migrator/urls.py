@@ -28,27 +28,28 @@
 # if any, to sign a "copyright disclaimer" for the program, if necessary.
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
+from django.contrib.auth.decorators import login_required
 from django.urls import path
-from django.views.generic import TemplateView
-from rest_framework.routers import SimpleRouter
 
-from .views import (
-    DownloadViewSet,
-    TestrailBackupViewSet,
-    TestrailSettingsViewSet,
-    TestyDeleteProjectViewSet,
-    UploaderView,
-    task_status,
-)
+from . import views
 
-router = SimpleRouter()
-router.register('settings', TestrailSettingsViewSet)
-router.register('backups', TestrailBackupViewSet)
 urlpatterns = [
-    path('', TemplateView.as_view(template_name='index.html'), name='migrator-index'),
-    path('upload/', UploaderView.as_view({'post': 'create'}), name='upload'),
-    path('clear/', TestyDeleteProjectViewSet.as_view({'post': 'create'}), name='delete'),
-    path('download/', DownloadViewSet.as_view({'post': 'create'}), name='download'),
-    path('task_status/<str:task_id>/', task_status, name='task_status')
+    path('', views.redirect_index, name='migrator-index'),
+
+    path('download/', login_required(views.download_view), name='download-project'),
+    path('upload/', login_required(views.upload_view), name='upload-project'),
+
+    path('configs/', login_required(views.TestrailSettingsListView.as_view()), name='settings-list'),
+    path('configs/add/', login_required(views.TestrailSettingsCreateView.as_view()), name='settings-add'),
+    path('configs/edit/<int:pk>/', login_required(views.TestrailSettingsUpdateView.as_view()), name='settings-edit'),
+    path(
+        'configs/delete/<int:pk>/',
+        login_required(views.TestrailSettingsDeleteView.as_view()),
+        name='settings-delete'
+    ),
+
+    path('backups/', login_required(views.TestrailBackupListView.as_view()), name='backup-list'),
+    path('backups/delete/<int:pk>/', login_required(views.TestrailBackupDeleteView.as_view()), name='backup-delete'),
+
+    path('task_status/<str:task_id>/', views.task_status, name='task_status')
 ]
-urlpatterns += router.urls

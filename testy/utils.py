@@ -33,9 +33,10 @@ import os
 import time
 from contextlib import contextmanager
 from hashlib import md5
-from typing import List
+from typing import Any, Callable, Dict, List, Union
 
 from celery_progress.backend import ProgressRecorder
+from django.db.models import Prefetch
 
 
 class ProgressRecorderContext(ProgressRecorder):
@@ -74,9 +75,78 @@ def parse_bool_from_str(value):
     return False
 
 
-def form_tree_prefetch_query(nested_prefetch_field: str, prefetch_field: str, tree_depth) -> List[str]:
+def form_tree_prefetch_lookups(nested_prefetch_field: str, prefetch_field: str, tree_depth) -> List[str]:
+    """
+    Form list of lookups for nested objects.
+
+    Args:
+        nested_prefetch_field: child field for instance
+        prefetch_field: field to be prefetched on child
+        tree_depth: MPTTModel max tree depth
+
+    Returns:
+        List of prefetch lookups. Where first element is prefetch field
+
+    Example:
+        Form nested lookups for field test_cases for child_test_suites:
+        input -> form_tree_prefetch_lookups('child_test_suites', 'test_cases', 2)
+        output -> 'test_cases', 'child_test_suites__test_cases', 'child_test_suites__child_test_suites__test_cases'
+    """
     queries = [prefetch_field]
     for count in range(1, tree_depth + 1):
         query = '__'.join([nested_prefetch_field for _ in range(count)]) + '__' + prefetch_field
         queries.append(query)
     return queries
+
+
+def form_tree_prefetch_objects(
+        nested_prefetch_field: str,
+        prefetch_field: str,
+        tree_depth: int,
+        queryset_class,
+        annotation: Dict[str, Any] = None,
+        queryset_filter: Dict[str, Any] = None,
+        order_by_fields: List[str] = None,
+) -> List[Prefetch]:
+    """
+    Form a list of prefetch objects for MPTTModels prefetch.
+
+    Args:
+        nested_prefetch_field: child field name for prefetching
+        prefetch_field: field name that will be prefetched in child
+        tree_depth: MPTTModel element max depth
+        queryset_class: Model class of queryset to be added inside prefetch object
+        annotation: Dict for .annotate() method keys = fields, values = anything for annotation like Count()
+        queryset_filter: Dict for .filter() method keys = fields, values = values to filter by in specified field
+
+    Returns:
+        List of Prefetch objects
+    """
+    if not order_by_fields:
+        order_by_fields = []
+    if not annotation:
+        annotation = {}
+    prefetch_objects_list = []
+    for lookup_str in form_tree_prefetch_lookups(nested_prefetch_field, prefetch_field, tree_depth):
+        if queryset_filter:
+            qs = queryset_class.objects.filter(**queryset_filter).annotate(**annotation).order_by(*order_by_fields)
+        else:
+            qs = queryset_class.objects.all().annotate(**annotation).order_by(*order_by_fields)
+        prefetch_objects_list.append(Prefetch(lookup_str, queryset=qs))
+    return prefetch_objects_list
+
+
+def get_breadcrumbs_treeview(instances, depth: int, title_method: Callable = None) -> Dict[str, Union[str, None]]:
+    """
+    Recursively get treeview dict of mptt tree model.
+
+    Args:
+        instances: ordered tree of ancestors for mptt tree element
+        depth: len of tree -1
+        title_method: method to get title, if not provided use model.name of instance
+    """
+    return {
+        'id': instances[depth].id,
+        'title': title_method(instances[depth]) if title_method else instances[depth].name,
+        'parent': None if depth == 0 else get_breadcrumbs_treeview(instances, depth - 1, title_method)
+    }

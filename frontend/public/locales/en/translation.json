@@ -119,7 +119,11 @@
     "estimate": "Estimate",
     "input_estimate": "Enter estimate",
     "cancel": "Cancel",
-    "submit": "Save"
+    "submit": "Save",
+    "with_steps": "With steps",
+    "step_title": "Step title",
+    "step_description": "Step description",
+    "add_step": "Add step"
   },
   "suite_delete": {
     "case_delete": "Are You sure, that You want to delete the test case?",
@@ -186,7 +190,8 @@
     "setup": "Setup:",
     "teardown": "Teardown:",
     "description": "Description:",
-    "result": "Result:",
+    "steps_results": "Steps results:",
+    "test_result": "Test result:",
     "comments": "Comments:",
     "comment": "Comment:",
     "input_comments": "Enter comments for test results",

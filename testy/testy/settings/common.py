@@ -42,6 +42,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import json
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from django.utils.translation import gettext_lazy as _
@@ -75,6 +76,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'drf_yasg',
+    'django_celery_beat',
     'mptt',
     'rest_framework',
     'django_filters',
@@ -84,12 +86,15 @@ INSTALLED_APPS = [
     'users',
     'tests_description',
     'tests_representation',
+    'testy',
     'celery',
     'celery_progress',
 ]
 
 TESTY_PLUGINS = [
-    'testrail_migrator'
+    'testrail_migrator',
+    'allure_uploader',
+    'dita_generator'
 ]
 
 MIDDLEWARE = [
@@ -195,6 +200,7 @@ MEDIA_ROOT = 'media'  # noqa: F405
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
+AUTH_TOKEN_TTL = 365  # in days
 CHAR_FIELD_MAX_LEN = 255
 MIN_VALUE_POSITIVE_INTEGER = 0
 
@@ -206,11 +212,15 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'testy.auth.TokenAuthenticationTTL'
     ],
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
     ],
 }
+
+
+ACCESS_TOKEN_LIFETIME: timedelta(minutes=60)
 
 # Django CORS headers
 CORS_ALLOW_CREDENTIALS = True

@@ -30,6 +30,7 @@
 # <http://www.gnu.org/licenses/>.
 
 from django.contrib.auth.models import AbstractUser, Group
+from django.db import models
 
 from testy.models import ServiceModelMixin
 
@@ -42,6 +43,8 @@ class Group(Group, ServiceModelMixin):
 
 
 class User(AbstractUser, ServiceModelMixin):
+    config = models.JSONField(default=dict, blank=True)
+
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'

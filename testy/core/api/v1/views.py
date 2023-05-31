@@ -29,14 +29,15 @@
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
 import permissions
-from core.api.v1.serializers import AttachmentSerializer, ProjectSerializer
+from core.api.v1.serializers import AttachmentSerializer, ProjectSerializer, ProjectStatisticsSerializer
 from core.selectors.attachments import AttachmentSelector
 from core.selectors.projects import ProjectSelector
 from core.services.attachments import AttachmentService
 from core.services.projects import ProjectService
-from filters import ArchiveFilter, TestyFilterBackend
+from filters import AttachmentFilter, ProjectArchiveFilter, TestyFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from tests_representation.api.v1.serializers import ParameterSerializer, TestPlanTreeSerializer
@@ -48,8 +49,8 @@ class ProjectViewSet(ModelViewSet):
     queryset = ProjectSelector.project_list()
     serializer_class = ProjectSerializer
     filter_backends = [TestyFilterBackend]
-    filterset_class = ArchiveFilter
-    permission_classes = [permissions.IsAdminOrForbidArchiveUpdate]
+    filterset_class = ProjectArchiveFilter
+    permission_classes = [permissions.IsAdminOrForbidArchiveUpdate, IsAuthenticated]
 
     @action(detail=False)
     def testplans_by_project(self, request, pk):
@@ -63,6 +64,11 @@ class ProjectViewSet(ModelViewSet):
         serializer = ParameterSerializer(qs, many=True, context={'request': request})
         return Response(serializer.data)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(ProjectSelector.project_list_statistics())
+        serializer = ProjectStatisticsSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
     def perform_create(self, serializer: ProjectSerializer):
         serializer.instance = ProjectService().project_create(serializer.validated_data)
 
@@ -74,6 +80,8 @@ class AttachmentViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins
                         mixins.DestroyModelMixin, GenericViewSet):
     queryset = AttachmentSelector().attachment_list()
     serializer_class = AttachmentSerializer
+    filter_backends = [TestyFilterBackend]
+    filterset_class = AttachmentFilter
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

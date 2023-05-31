@@ -46,12 +46,12 @@ class TestParameterEndpoints:
     view_name_list = 'api:v1:parameter-list'
     view_name_detail = 'api:v1:parameter-detail'
 
-    def test_list(self, api_client, authorized_superuser, parameter_factory):
+    def test_list(self, api_client, authorized_superuser, parameter_factory, project):
         expected_instances = []
         for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE):
-            expected_instances.append(model_to_dict(parameter_factory()))
+            expected_instances.append(model_to_dict(parameter_factory(project=project)))
 
-        response = api_client.send_request(self.view_name_list)
+        response = api_client.send_request(self.view_name_list, query_params={'project': project.id})
 
         for instance in json.loads(response.content):
             instance.pop('url')

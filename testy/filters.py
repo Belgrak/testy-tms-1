@@ -28,8 +28,17 @@
 # if any, to sign a "copyright disclaimer" for the program, if necessary.
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
+import operator
+from functools import reduce
+
+from core.models import Attachment
+from django.db import models
+from django.db.models import OuterRef, Q, Subquery
 from django_filters import rest_framework as filters
-from tests_representation.models import Test, TestPlan, TestResult
+from rest_framework.exceptions import NotFound
+from rest_framework.filters import OrderingFilter, SearchFilter
+from tests_description.models import TestCase, TestSuite
+from tests_representation.models import Parameter, Test, TestPlan, TestResult
 
 from utils import parse_bool_from_str
 
@@ -41,7 +50,33 @@ class TestyFilterBackend(filters.DjangoFilterBackend):
         return kwargs
 
 
-class ArchiveFilter(filters.FilterSet):
+class BaseProjectFilter(filters.FilterSet):
+    def __init__(self, *args, action=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.action = action
+
+    def filter_queryset(self, queryset):
+        if self.data.get('project') is None and self.action == 'list':
+            raise NotFound('Project id was not provided in query params')
+        return super().filter_queryset(queryset)
+
+
+class TestSuiteFilter(BaseProjectFilter):
+    class Meta:
+        model = TestSuite
+        fields = ('project',)
+
+
+class ArchiveFilter(BaseProjectFilter):
+
+    def filter_queryset(self, queryset):
+        if not parse_bool_from_str(self.data.get('is_archive')) and self.action == 'list':
+            queryset = queryset.filter(is_archive=False)
+        return super().filter_queryset(queryset)
+
+
+class ProjectArchiveFilter(filters.FilterSet):
+
     def __init__(self, *args, action=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.action = action
@@ -52,6 +87,24 @@ class ArchiveFilter(filters.FilterSet):
         return super().filter_queryset(queryset)
 
 
+class TestCaseFilter(BaseProjectFilter):
+    class Meta:
+        model = TestCase
+        fields = ('project', 'suite')
+
+
+class ParameterFilter(BaseProjectFilter):
+    class Meta:
+        model = Parameter
+        fields = ('project',)
+
+
+class AttachmentFilter(BaseProjectFilter):
+    class Meta:
+        model = Attachment
+        fields = ('project',)
+
+
 class TestPlanFilter(ArchiveFilter):
     class Meta:
         model = TestPlan
@@ -59,12 +112,67 @@ class TestPlanFilter(ArchiveFilter):
 
 
 class TestFilter(ArchiveFilter):
+    def filter_queryset(self, queryset):
+        last_status = self.data.get('last_status')
+        if last_status:
+            last_status = last_status.split(',')
+            q_lookup = Q(last_status__in=last_status)
+            if 'null' in last_status:
+                last_status.remove('null')
+                q_lookup = Q(last_status__in=last_status) | Q(last_status__isnull=True)
+
+            queryset = queryset.annotate(
+                last_status=Subquery(
+                    TestResult.objects.filter(test_id=OuterRef("id")).order_by("-created_at").values('status')[:1]
+                ),
+            ).filter(q_lookup)
+        return super().filter_queryset(queryset)
+
     class Meta:
         model = Test
-        fields = ('plan',)
+        fields = ('project', 'plan',)
 
 
 class TestResultFilter(ArchiveFilter):
     class Meta:
         model = TestResult
-        fields = ('test',)
+        fields = ('project', 'test',)
+
+
+class TestOrderingFilter(OrderingFilter):
+
+    def filter_queryset(self, request, queryset, view):
+        ordering = self.get_ordering(request, queryset, view)
+        if not ordering:
+            return queryset
+
+        return queryset.annotate(
+            last_status=Subquery(
+                TestResult.objects.filter(test_id=OuterRef("id")).order_by("-created_at").values('status')[:1]),
+            case_name=Subquery(TestCase.objects.filter(pk=OuterRef('case_id')).values('name')[:1])
+        ).order_by(*ordering)
+
+
+class TestSearchFilter(SearchFilter):
+    def filter_queryset(self, request, queryset, view):
+        search_fields = self.get_search_fields(view, request)
+        search_terms = self.get_search_terms(request)
+
+        if not search_fields or not search_terms:
+            return queryset
+
+        orm_lookups = [
+            self.construct_search(f'case__{search_field}')
+            for search_field in search_fields
+        ]
+
+        conditions = []
+        for search_term in search_terms:
+            queries = [
+                models.Q(**{orm_lookup: search_term})
+                for orm_lookup in orm_lookups
+            ]
+            conditions.append(reduce(operator.or_, queries))
+        queryset = queryset.filter(reduce(operator.and_, conditions))
+
+        return queryset

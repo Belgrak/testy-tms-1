@@ -33,6 +33,7 @@ import json
 from http import HTTPStatus
 
 import pytest
+from core.api.v1.serializers import ProjectSerializer
 from core.models import Project
 from django.forms import model_to_dict
 from tests_description.models import TestCase
@@ -40,7 +41,7 @@ from tests_representation.choices import TestStatuses
 from tests_representation.models import Parameter, TestResult
 
 from tests import constants
-from tests.commons import RequestType
+from tests.commons import RequestType, model_to_dict_via_serializer
 from tests.error_messages import PERMISSION_ERR_MSG, REQUIRED_FIELD_MSG
 
 
@@ -51,12 +52,14 @@ class TestProjectEndpoints:
 
     def test_list(self, api_client, authorized_superuser, project_factory):
         expected_instances = []
+        additional_info_fields = {'cases_count': 0, 'plans_count': 0, 'suites_count': 0, 'tests_count': 0}
         for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE):
-            expected_instances.append(model_to_dict(project_factory()))
+            model_dict = model_to_dict_via_serializer([project_factory()], ProjectSerializer)
+            model_dict.update(additional_info_fields)
+            expected_instances.append(model_dict)
 
         response = api_client.send_request(self.view_name_list)
         for instance in json.loads(response.content):
-            instance.pop('url')
             assert instance in expected_instances
 
     def test_retrieve(self, api_client, authorized_superuser, project):

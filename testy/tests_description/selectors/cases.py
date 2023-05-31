@@ -29,14 +29,24 @@
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
 
+from typing import List
+
 from django.db.models import QuerySet
-from tests_description.models import TestCase
+from tests_description.models import TestCase, TestCaseStep
 
 
 class TestCaseSelector:
     def case_list(self) -> QuerySet[TestCase]:
-        return TestCase.objects.all()
+        return TestCase.objects.all().prefetch_related('attachments')
 
     def case_version(self, case: TestCase) -> int:
         history = case.history.first()
         return history.history_id
+
+    def get_steps_ids_by_testcase(self, case: TestCase) -> List[int]:
+        return case.steps.values_list('id', flat=True)
+
+
+class TestCaseStepSelector:
+    def step_exists(self, step_id) -> bool:
+        return TestCaseStep.objects.filter(id=step_id).exists()

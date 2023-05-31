@@ -71,3 +71,11 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.instance = UserService().user_update(serializer.instance, serializer.validated_data)
         return Response(serializer.data)
+
+    @action(methods=['get', 'patch'], url_path='me/config', url_name='config', detail=False)
+    def config(self, request):
+        if request.method == 'GET':
+            return Response(request.user.config)
+        if request.method == 'PATCH':
+            return Response(UserService().config_update(request.user, request.data))
+        return Response(request.user.config)

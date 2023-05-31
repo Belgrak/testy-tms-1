@@ -62,3 +62,9 @@ class UserService:
         user.full_clean()
         user.save()
         return user
+
+    def config_update(self, user: UserModel, config: Dict[str, Any]) -> Dict[str, Any]:
+        user.config.update(config)
+        user.full_clean(exclude=['password'])
+        user.save()
+        return user.config

@@ -24,7 +24,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import FolderCopyOutlinedIcon from '@mui/icons-material/FolderCopyOutlined';
 import BlockIcon from '@mui/icons-material/Block';
 import {treeSuite} from "../testcases/suites.component";
-import {param, testPlan} from "../models.interfaces";
+import {myCase, param, testPlan} from "../models.interfaces";
 import SuiteCaseService from "../../services/suite.case.service";
 import {useTranslation} from "react-i18next";
 import MDEditor from "@uiw/react-md-editor";
@@ -86,6 +86,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
     const [testsChecked, setTestsChecked] = useState<Array<string>>([])
     const [testsExpanded, setTestsExpanded] = useState<Array<string>>([])
     const [testPlansForSelect, setTestPlansForSelect] = useState<testPlan[]>([])
+    const [cases, setCases] = useState<myCase[]>()
 
     useEffect(() => {
         TestPlanService.getParameters().then((response) => {
@@ -96,7 +97,12 @@ const CreationTestplanComponent: React.FC<Props> = ({
                 console.log(e);
             });
         SuiteCaseService.getTreeSuites().then((response) => {
-            setTreeSuites(response.data)
+            const t: treeSuite[] = response.data
+            setTreeSuites(t)
+
+            SuiteCaseService.getCases().then((response) => {
+                setCases(response.data)
+            })
         })
             .catch((e) => {
                 console.log(e);
@@ -228,6 +234,9 @@ const CreationTestplanComponent: React.FC<Props> = ({
     function testsNodes(treeSuites: treeSuite[]) {
         let arr: Node[] = []
         treeSuites.forEach((suite) => {
+
+
+            suite.test_cases = cases?.filter((c) => c.suite == suite.id) ?? []
             if (suite.children.length !== 0) {
                 let children: Node[] = []
                 if (suite.test_cases.length !== 0) {
@@ -337,9 +346,11 @@ const CreationTestplanComponent: React.FC<Props> = ({
             open={show}
             onClose={handleClose}
             classes={{paper: classes.paperCreation}}
-            sx={{ "& .MuiDialog-paper": {
+            sx={{
+                "& .MuiDialog-paper": {
                     border: "1px solid #666666",
-                }}}
+                }
+            }}
         >
             <form className={classes.formTestPlan}
                   onSubmit={createTestPlan}
@@ -402,7 +413,7 @@ const CreationTestplanComponent: React.FC<Props> = ({
                                         ['heading', 'bold', 'italic', 'quote', 'code', 'codeblock', 'link', 'ul', 'ol', 'task']
                                     ]}
                                 />
-                            {/*    TODO устанавливать ширину?*/}
+                                {/*    TODO устанавливать ширину?*/}
                             </div>
                         </div>
 

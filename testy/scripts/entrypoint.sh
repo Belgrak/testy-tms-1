@@ -5,6 +5,8 @@ while ! nc -z db 5432; do
 done
 echo "PostgreSQL started"
 pip install -e plugins/migrator
+pip install -e plugins/allure_uploader
+pip install -e plugins/dita_generator
 python manage.py migrate --no-input
 python manage.py seed_db
 python manage.py collectstatic --no-input

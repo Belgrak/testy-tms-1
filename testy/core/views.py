@@ -63,6 +63,6 @@ class AttachmentView(APIView):
         except Attachment.DoesNotExist:
             return Response('Attachment was not found', status=status.HTTP_404_NOT_FOUND)
         try:
-            return FileResponse(attachment.file)
+            return FileResponse(attachment.file.file)
         except FileNotFoundError:
             return Response(status=status.HTTP_404_NOT_FOUND)

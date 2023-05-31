@@ -31,6 +31,7 @@
 
 from django.contrib import admin
 from mptt.admin import MPTTModelAdmin
+from simple_history.admin import SimpleHistoryAdmin
 from tests_description.models import TestCase, TestSuite
 
 from testy.admin import BaseAdmin
@@ -43,6 +44,6 @@ class TestSuiteAdmin(BaseAdmin, MPTTModelAdmin):
 
 
 @admin.register(TestCase)
-class TestCaseAdmin(BaseAdmin):
-    list_display = ('name', 'project', 'suite', )
+class TestCaseAdmin(SimpleHistoryAdmin):
+    list_display = ('name', 'project', 'suite',)
     search_fields = ('name',)

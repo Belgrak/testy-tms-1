@@ -35,4 +35,4 @@ from tests_representation.models import Test
 
 class TestSelector:
     def test_list(self) -> QuerySet[Test]:
-        return Test.objects.all()
+        return Test.objects.select_related('case').prefetch_related('results').all()

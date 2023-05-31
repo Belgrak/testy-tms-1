@@ -28,13 +28,23 @@
 # if any, to sign a "copyright disclaimer" for the program, if necessary.
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
-
 import permissions
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
-from django_filters.rest_framework import DjangoFilterBackend
-from filters import TestFilter, TestPlanFilter, TestResultFilter, TestyFilterBackend
+from filters import (
+    ParameterFilter,
+    TestFilter,
+    TestOrderingFilter,
+    TestPlanFilter,
+    TestResultFilter,
+    TestSearchFilter,
+    TestyFilterBackend,
+)
+from paginations import StandardSetPagination
 from rest_framework import mixins, status
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
@@ -59,12 +69,14 @@ from tests_representation.services.testplans import TestPlanService
 from tests_representation.services.tests import TestService
 from utilities.request import get_boolean
 
+from utils import get_breadcrumbs_treeview
+
 
 class ParameterViewSet(ModelViewSet):
     queryset = ParameterSelector().parameter_list()
     serializer_class = ParameterSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['project']
+    filter_backends = [TestyFilterBackend]
+    filterset_class = ParameterFilter
 
     def perform_create(self, serializer: ParameterSerializer):
         serializer.instance = ParameterService().parameter_create(serializer.validated_data)
@@ -73,19 +85,50 @@ class ParameterViewSet(ModelViewSet):
         serializer.instance = ParameterService().parameter_update(serializer.instance, serializer.validated_data)
 
 
-class TestPLanListView(mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
-    serializer_class = TestPlanOutputSerializer
-    queryset = TestPlanSelector().testplan_list()
-    filter_backends = [TestyFilterBackend]
-    filterset_class = TestPlanFilter
-
+class TestPLanStatisticsView(APIView):
     def get_view_name(self):
-        return "Test Plan List"
+        return "Test Plan Statistics"
+
+    def get_object(self, pk):
+        try:
+            return TestPlanSelector().testplan_get_by_pk(pk)
+        except ObjectDoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        test_plan = self.get_object(pk)
+        return Response(TestPlanSelector().testplan_statistics(test_plan))
+
+
+class TestPlanViewSet(ModelViewSet):
+    serializer_class = TestPlanOutputSerializer
+    queryset = None
+    filter_backends = [TestyFilterBackend, OrderingFilter]
+    filterset_class = TestPlanFilter
+    permission_classes = [permissions.IsAdminOrForbidArchiveUpdate, IsAuthenticated]
+    ordering_fields = ['started_at', 'created_at']
 
     def get_queryset(self):
-        if get_boolean(self.request, 'treeview'):
-            return TestPlanSelector().testplan_without_parent()
-        return super().get_queryset()
+        if get_boolean(self.request, 'treeview') and self.action == 'list':
+            return TestPlanSelector().testplan_without_parent(
+                is_archive=get_boolean(self.request, 'is_archive'),
+                children_ordering=self.request.query_params.get('ordering')
+            )
+        if self.action == 'breadcrumbs_view':
+            return TestPlanSelector.testplan_list_raw()
+        return TestPlanSelector().testplan_list(get_boolean(self.request, 'is_archive'))
+
+    @action(detail=True)
+    def breadcrumbs_view(self, request, *args, **kwargs):
+        instance = self.get_object()
+        tree = TestPlanSelector.testplan_list_ancestors(instance)
+        return Response(
+            get_breadcrumbs_treeview(
+                instances=tree,
+                depth=len(tree) - 1,
+                title_method=TestPlanOutputSerializer.get_title
+            )
+        )
 
     def get_serializer_class(self):
         if get_boolean(self.request, 'treeview'):
@@ -105,41 +148,13 @@ class TestPLanListView(mixins.ListModelMixin, mixins.CreateModelMixin, GenericVi
             status=status.HTTP_201_CREATED
         )
 
+    def destroy(self, request, *args, **kwargs):
+        test_plan = self.get_object()
+        TestPlanService().testplan_delete(test_plan=test_plan)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-class TestPLanStatisticsView(APIView):
-    def get_view_name(self):
-        return "Test Plan Statistics"
-
-    def get_object(self, pk):
-        try:
-            return TestPlanSelector().testplan_get_by_pk(pk)
-        except ObjectDoesNotExist:
-            raise Http404
-
-    def get(self, request, pk):
-        test_plan = self.get_object(pk)
-        return Response(TestPlanSelector().testplan_statistics(test_plan))
-
-
-class TestPLanDetailView(APIView):
-    permission_classes = [permissions.IsAdminOrForbidArchiveUpdate]
-
-    def get_view_name(self):
-        return "Test Plan Detail"
-
-    def get_object(self, pk):
-        try:
-            return TestPlanSelector().testplan_get_by_pk(pk)
-        except ObjectDoesNotExist:
-            raise Http404
-
-    def get(self, request, pk):
-        test_plan = self.get_object(pk)
-        serializer = TestPlanOutputSerializer(test_plan, context={"request": request})
-        return Response(serializer.data)
-
-    def patch(self, request, pk):
-        test_plan = self.get_object(pk)
+    def update(self, request, *args, **kwargs):
+        test_plan = self.get_object()
         self.check_object_permissions(request, test_plan)
         serializer = TestPlanUpdateSerializer(data=request.data, instance=test_plan, context={"request": request},
                                               partial=True)
@@ -148,17 +163,15 @@ class TestPLanDetailView(APIView):
         return Response(TestPlanOutputSerializer(test_plan, context={'request': request}).data,
                         status=status.HTTP_200_OK)
 
-    def delete(self, request, pk):
-        test_plan = self.get_object(pk)
-        TestPlanService().testplan_delete(test_plan=test_plan)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class TestListViewSet(mixins.ListModelMixin, GenericViewSet):
     queryset = TestSelector().test_list()
     serializer_class = TestSerializer
-    filter_backends = [TestyFilterBackend]
+    filter_backends = [TestyFilterBackend, TestOrderingFilter, TestSearchFilter]
     filterset_class = TestFilter
+    pagination_class = StandardSetPagination
+    ordering_fields = ['id', 'case_name', 'is_archive', 'last_status']
+    search_fields = ['name']
 
     def get_view_name(self):
         return "Test List"

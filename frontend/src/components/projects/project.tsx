@@ -157,7 +157,7 @@ const Project: React.FC = () => {
             });
     }, [])
 
-    const charts = [<LineChartComponent tests={tests}/>, <PieChartComponent tests={tests}/>];
+    const charts = [<LineChartComponent testResults={testResults}/>, <PieChartComponent tests={tests}/>];
     const filter = useMemo(() => {
         if (!isLoaded) {
             statuses.forEach((status) => {
@@ -306,11 +306,19 @@ const Project: React.FC = () => {
                                 }
                             </Stack>
                             <Button variant="contained"
-                                    style={{marginLeft: '10px', backgroundColor: theme.palette.greyButton, color: "white"}}
+                                    style={{
+                                        marginLeft: '10px',
+                                        backgroundColor: theme.palette.greyButton,
+                                        color: "white"
+                                    }}
                                     onClick={handleOnOpenFilter}>{t("project.filter")}</Button>
                             <Button data-cy="openProjectSettingsPage"
                                     variant="contained"
-                                    style={{marginLeft: '10px', backgroundColor: theme.palette.greyButton, color: "white"}}
+                                    style={{
+                                        marginLeft: '10px',
+                                        backgroundColor: theme.palette.greyButton,
+                                        color: "white"
+                                    }}
                                     onClick={handleShowProjectSettings}
                             >{t("project.settings")}</Button>
                         </Stack>

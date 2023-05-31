@@ -28,9 +28,21 @@
 # if any, to sign a "copyright disclaimer" for the program, if necessary.
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
+
 from celery import shared_task
+from django.db import transaction
+from django.utils import timezone
+
+from .auth.models import TTLToken
 
 
 @shared_task(bind=True)
 def debug_task(self):
     print(f'Request: {self.request!r}')
+
+
+@shared_task(bind=True)
+@transaction.atomic
+def delete_expired_tokens(self):
+    TTLToken.objects.filter(expiration_date__lt=timezone.now()).delete()
+    return f'Completed deleting expired tokens at {timezone.now()}'

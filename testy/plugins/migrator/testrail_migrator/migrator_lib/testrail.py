@@ -142,6 +142,10 @@ class TestRailClient:
         return await self._process_request(f'/get_suites/{project_id}')
 
     @async_to_sync
+    async def get_suite(self, suite_id):
+        return await self._process_request(f'/get_suite/{suite_id}')
+
+    @async_to_sync
     async def get_project(self, project_id):
         return await self._process_request(f'/get_project/{project_id}')
 
@@ -190,6 +194,15 @@ class TestRailClient:
                 filtered_children.append(child_milestone)
             milestone['milestones'] = filtered_children
         return milestones
+
+    @async_to_sync
+    async def get_milestone(self, milestone_id: int):
+        filtered_children = []
+        milestone = await self._process_request(f'/get_milestone/{milestone_id}')
+        for child_milestone in milestone['milestones']:
+            filtered_children.append(child_milestone)
+        milestone['milestones'] = filtered_children
+        return milestone
 
     @async_to_sync
     async def get_configs(self, project_id):

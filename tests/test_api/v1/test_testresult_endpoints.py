@@ -47,14 +47,14 @@ class TestResultEndpoints:
     view_name_list = 'api:v1:testresult-list'
     view_name_detail = 'api:v1:testresult-detail'
 
-    def test_list(self, api_client, authorized_superuser, test_result_factory):
+    def test_list(self, api_client, authorized_superuser, test_result_factory, project):
         expected_instances = model_to_dict_via_serializer(
-            [test_result_factory() for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE)],
+            [test_result_factory(project=project) for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE)],
             TestResultSerializer,
             many=True
         )
 
-        response = api_client.send_request(self.view_name_list)
+        response = api_client.send_request(self.view_name_list, query_params={'project': project.id})
 
         for instance_dict in json.loads(response.content):
             assert instance_dict in expected_instances, f'{instance_dict} was not found in expected instances.'
@@ -65,6 +65,7 @@ class TestResultEndpoints:
         expected_dict['status_text'] = test_result.get_status_display()
         expected_dict['user_full_name'] = test_result.user.get_full_name()
         expected_dict['attachments'] = []
+        expected_dict['steps_results'] = []
         response = api_client.send_request(self.view_name_detail, reverse_kwargs={'pk': test_result.pk})
         actual_dict = json.loads(response.content)
         actual_dict.pop('url')
@@ -120,17 +121,17 @@ class TestResultEndpoints:
         assert TestResult.objects.filter(test=tests[0]).count() == 1, f'Only 1 result should be on a test "{tests[0]}"'
         assert TestResult.objects.filter(test=tests[1]).count() == 1, f'Only 1 result should be on a test "{tests[1]}"'
 
-    def test_get_results_by_test(self, api_client, test_result_factory, test_factory, authorized_superuser):
+    def test_get_results_by_test(self, api_client, test_result_factory, test_factory, authorized_superuser, project):
         test1 = test_factory()
         test2 = test_factory()
 
         dicts_test1 = model_to_dict_via_serializer(
-            [test_result_factory(test=test1) for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE)],
+            [test_result_factory(test=test1, project=project) for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE)],
             TestResultSerializer,
             many=True
         )
         dicts_test2 = model_to_dict_via_serializer(
-            [test_result_factory(test=test2) for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE)],
+            [test_result_factory(test=test2, project=project) for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE)],
             TestResultSerializer,
             many=True
         )
@@ -139,13 +140,13 @@ class TestResultEndpoints:
             'api:v1:testresult-list',
             expected_status=HTTPStatus.OK,
             request_type=RequestType.GET,
-            query_params={'test': test1.id}
+            query_params={'test': test1.id, 'project': project.id}
         )
         response_test2 = api_client.send_request(
             'api:v1:testresult-list',
             expected_status=HTTPStatus.OK,
             request_type=RequestType.GET,
-            query_params={'test': test2.id}
+            query_params={'test': test2.id, 'project': project.id}
         )
         actual_results1 = json.loads(response_test1.content)
         actual_results2 = json.loads(response_test2.content)

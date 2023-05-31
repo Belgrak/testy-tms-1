@@ -2,7 +2,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import useStyles from "../../styles/styles";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -11,13 +11,18 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import SuiteCaseService from "../../services/suite.case.service";
 import {CustomWidthTooltip, treeSuite} from "./suites.component";
-import {myCase} from "../models.interfaces";
+import {myCase, stepInput} from "../models.interfaces";
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import AttachmentButton from "../attachment/attachment_button";
 import AttachmentService from "../../services/attachment.servise";
 import {useTranslation} from "react-i18next";
 import localStorageTMS from "../../services/localStorageTMS";
 import {useMode} from "../../context/ColorModeContextProvider";
+import Checkbox from "@mui/material/Checkbox";
+import DeleteIcon from '@mui/icons-material/Delete';
+import IconButton from "@mui/material/IconButton";
+import {DragDropContext, Draggable, Droppable, OnDragEndResponder} from "react-beautiful-dnd"
+import {Card} from "@mui/material";
 
 interface Props {
     show: boolean;
@@ -69,9 +74,13 @@ const CreationCase: React.FC<Props> = ({
     const [setup, setSetup] = useState("")
     const [teardown, setTeardown] = useState("")
 
+    const [isSteps, setIsSteps] = useState(false)
+    const [steps, setSteps] = useState<stepInput[]>([{name: "", scenario: "", "sort_order": 0, attachments: []}])
+
     const [suitesForSelect, setSuitesForSelect] = useState<{ id: number, name: string }[] | treeSuite[]>([])
 
     const [filesSelected, setFilesSelected] = React.useState<File[]>()
+    const [filesSteps, setFilesSteps] = React.useState<File[][]>(Array(steps.length).fill([]))
 
     useEffect(() => {
         const suitesForSelect: { id: number, name: string }[] = []
@@ -96,6 +105,10 @@ const CreationCase: React.FC<Props> = ({
             setDescription(infoCaseForEdit.description)
             setScenarioPresence(true)
             setSetup(infoCaseForEdit.setup)
+            setIsSteps(infoCaseForEdit.is_steps)
+            if (infoCaseForEdit.is_steps) {
+                setSteps(infoCaseForEdit.steps)
+            }
             setTeardown(infoCaseForEdit.teardown)
             if (infoCaseForEdit.estimate) {
                 setEstimate(infoCaseForEdit.estimate.toString())
@@ -116,6 +129,8 @@ const CreationCase: React.FC<Props> = ({
         setFillFieldName(false)
         setFillFieldScenario(false)
         setSetup("")
+        setSteps([{name: "", scenario: "", "sort_order": 0, attachments: []}])
+        setIsSteps(false)
         setTeardown("")
         setInfoCaseForEdit(null)
         setFilesSelected([])
@@ -153,6 +168,50 @@ const CreationCase: React.FC<Props> = ({
         setField(str)
     }
 
+    const onAddStep = () => {
+        setSteps([...steps, {name: "", scenario: "", sort_order: steps.length}])
+    }
+
+    const onChangeStepName = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+        const t = steps[index]
+        t.name = e.target.value
+        setSteps(steps.slice(0, index).concat([t], steps.slice(index + 1)))
+    }
+
+    const onChangeStepScenario = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+        const t = steps[index]
+        t.scenario = e.target.value
+        setSteps(steps.slice(0, index).concat([t], steps.slice(index + 1)))
+    }
+
+    const setFilesStep = (files: File[], index: number) => {
+        console.log(index)
+        const t = steps[index]
+        t.attachments = files
+        setSteps(steps.slice(0, index).concat([t], steps.slice(index + 1)))
+    }
+
+    const onDeleteStep = (index: number) => {
+        setSteps(steps.slice(0, index).concat(steps.slice(index + 1)))
+    }
+
+    const onDragEnd: OnDragEndResponder = (result) => {
+        if (!result.destination) return;
+        const items = Array.from(steps)
+        const [reorderedItem] = items.splice(result.source.index, 1)
+        reorderedItem.sort_order = result.destination.index
+        items.splice(result.destination.index, 0, reorderedItem)
+        items.slice(result.destination.index + 1).forEach((step, index) => {
+            if (step.sort_order === undefined || !result.destination) return;
+            step.sort_order = result.destination.index + 1 + index
+            items.splice(index + result.destination.index + 1, 1, step)
+        })
+
+        setSteps(items)
+        console.log(items)
+    }
+
+
     const createCase = () => {
         const projectId = localStorageTMS.getCurrentProject().id
         if (namePresence && scenarioPresence && projectId) {
@@ -163,11 +222,14 @@ const CreationCase: React.FC<Props> = ({
                 scenario: scenario,
                 estimate: estimateNumber,
                 teardown: teardown,
+                is_steps: isSteps,
+                steps: isSteps ? steps : [],
                 description: description,
                 setup: setup,
                 attachments: []
             }
             if (infoCaseForEdit) {
+                console.log(steps)
                 SuiteCaseService.editCase({...myCase, url: infoCaseForEdit.url, id: infoCaseForEdit.id}).then(() => {
                     AttachmentService.postAttachments(filesSelected, infoCaseForEdit.id, 11)
                         .then(() => {
@@ -234,15 +296,114 @@ const CreationCase: React.FC<Props> = ({
         },
     };
 
+    const stepsInput = useMemo(() =>
+            <>
+                <div>
+                    {steps.map((step, index) =>
+                        <Draggable draggableId={"step" + index.toString()} index={index}>
+                            {(provided) =>
+                                <li {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                                    <Card className={classes.gridContent} style={{
+                                        marginTop: "10px",
+                                        padding: "20px 20px 20px 20px"
+                                    }}>
+                                        <div style={{display: "flex"}}>
+                                            <div style={{width: "100%"}}>
+                                                <Typography variant="h6">
+                                                    {t("case_create.step_title")}
+                                                </Typography>
+                                                <CustomWidthTooltip
+                                                    title={<Grid data-cy="fill-field-note"
+                                                                 style={{
+                                                                     display: "flex",
+                                                                     flexDirection: 'row'
+                                                                 }}><WarningAmberIcon
+                                                        sx={{fontSize: 25, marginRight: 1}}/>
+                                                        <Typography>{t("case_create.fill_field")}</Typography></Grid>}
+                                                    placement="top-start"
+                                                    arrow
+                                                    open={fillFieldScenario}>
+                                                    <TextField
+                                                        className={classes.textFieldSelectCreationCaseSuite}
+                                                        onChange={(content) => onChangeStepName(content, index)}
+                                                        variant="outlined"
+                                                        value={step.name}
+                                                        margin="normal"
+                                                        fullWidth
+                                                        required
+                                                        label={t("case_create.step_title")}
+                                                        autoComplete="off"
+                                                        multiline
+                                                        minRows={2}
+                                                        maxRows={3}
+                                                    />
+                                                </CustomWidthTooltip>
+                                                <Typography variant="h6">
+                                                    {t("case_create.step_description")}
+                                                </Typography>
+                                                <CustomWidthTooltip
+                                                    title={<Grid data-cy="fill-field-note"
+                                                                 style={{
+                                                                     display: "flex",
+                                                                     flexDirection: 'row'
+                                                                 }}><WarningAmberIcon
+                                                        sx={{fontSize: 25, marginRight: 1}}/>
+                                                        <Typography>{t("case_create.fill_field")}</Typography></Grid>}
+                                                    placement="top-start"
+                                                    arrow
+                                                    open={fillFieldScenario}>
+                                                    <TextField
+                                                        className={classes.textFieldSelectCreationCaseSuite}
+                                                        onChange={(content) => onChangeStepScenario(content, index)}
+                                                        variant="outlined"
+                                                        value={step.scenario}
+                                                        margin="normal"
+                                                        autoComplete="off"
+                                                        required
+                                                        fullWidth
+                                                        label={t("case_create.step_description")}
+                                                    />
+                                                </CustomWidthTooltip>
+                                                <AttachmentButton setFilesSelected={(files) => setFilesStep(files, index)}
+                                                                  selectedFiles={step.attachments}/>
+                                            </div>
+
+                                            <IconButton style={{backgroundColor: 'transparent'}}
+                                                        onClick={() => onDeleteStep(index)}>
+                                                <DeleteIcon/>
+                                            </IconButton>
+                                        </div>
+
+
+                                    </Card>
+                                </li>}
+                        </Draggable>
+                    )}
+                </div>
+
+
+                <Button
+                    variant={"contained"} style={{backgroundColor: theme.palette.greyButton, marginTop: "10px"}}
+                    onClick={onAddStep}
+                >
+                    {t("case_create.add_step")}
+                </Button>
+            </>
+        , [steps]
+    )
+
+
     return (
         <Dialog
             disableEnforceFocus
             open={show}
             onClose={handleClose}
             classes={{paper: classes.paperCreationTestCase}}
-            sx={{ "& .MuiDialog-paper": {
+            sx={{
+                "& .MuiDialog-paper": {
                     border: "1px solid #666666",
-                }}}
+                }
+            }}
         >
             <Grid container style={{
                 position: "absolute",
@@ -257,7 +418,9 @@ const CreationCase: React.FC<Props> = ({
                         <CustomWidthTooltip
                             title={<Grid data-cy="fill-field-note"
                                          style={{display: "flex", flexDirection: 'row'}}><WarningAmberIcon
-                                sx={{fontSize: 25, marginRight: 1}}/> <Typography>{t("case_create.fill_field")}</Typography></Grid>} placement="top-start" arrow
+                                sx={{fontSize: 25, marginRight: 1}}/>
+                                <Typography>{t("case_create.fill_field")}</Typography></Grid>} placement="top-start"
+                            arrow
                             open={fillFieldName}>
                             <TextField
                                 id="nameCaseTextField"
@@ -281,7 +444,9 @@ const CreationCase: React.FC<Props> = ({
                         <CustomWidthTooltip
                             title={<Grid data-cy="fill-field-note"
                                          style={{display: "flex", flexDirection: 'row'}}><WarningAmberIcon
-                                sx={{fontSize: 25, marginRight: 1}}/> <Typography>{t("case_create.fill_field")}</Typography></Grid>} placement="top-start" arrow
+                                sx={{fontSize: 25, marginRight: 1}}/>
+                                <Typography>{t("case_create.fill_field")}</Typography></Grid>} placement="top-start"
+                            arrow
                             open={fillFieldScenario}>
                             <TextField
                                 id="scenarioCaseTextField"
@@ -359,6 +524,30 @@ const CreationCase: React.FC<Props> = ({
                             maxRows={3}
                         />
                     </Grid>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: "center"
+                    }}>
+                        <Typography variant="h6">
+                            {t("case_create.with_steps")}
+                        </Typography>
+                        <Checkbox
+                            id="case-isSteps"
+                            onChange={(current) => setIsSteps(current.target.checked)}
+                            checked={isSteps}
+                        />
+                    </div>
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <Droppable droppableId={"steps"}>
+                            {(provided) =>
+                                <ol {...provided.droppableProps} ref={provided.innerRef}>
+                                    {isSteps && stepsInput}
+                                    {provided.placeholder}
+                                </ol>
+                            }
+                        </Droppable>
+                    </DragDropContext>
                 </Grid>
                 <Grid xs={3} item style={{
                     backgroundColor: theme.palette.rightDialogPart, paddingTop: 26, display: "flex",
@@ -405,7 +594,10 @@ const CreationCase: React.FC<Props> = ({
                             />
                         </Grid>
                         <Grid>
-                            <AttachmentButton setFilesSelected={setFilesSelected}/>
+                            <AttachmentButton setFilesSelected={(files) => {
+                                console.log("zhmyaknuli")
+                                setFilesSelected(files)
+                            }}/>
                         </Grid>
                     </Grid>
                     <Grid style={{textAlign: "center"}}>

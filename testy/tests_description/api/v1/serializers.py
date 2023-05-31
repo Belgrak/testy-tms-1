@@ -28,22 +28,75 @@
 # if any, to sign a "copyright disclaimer" for the program, if necessary.
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
+
 from core.api.v1.serializers import AttachmentSerializer
 from core.selectors.attachments import AttachmentSelector
 from rest_framework import serializers
-from rest_framework.fields import IntegerField, SerializerMethodField
+from rest_framework.fields import IntegerField, SerializerMethodField, empty
 from rest_framework.relations import HyperlinkedIdentityField, PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
-from tests_description.models import TestCase, TestSuite
+from tests_description.models import TestCase, TestCaseStep, TestSuite
+
+
+class TestCaseStepBaseSerializer(ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = TestCaseStep
+        fields = ('id', 'name', 'scenario', 'sort_order')
+
+
+class TestCaseStepInputSerializer(TestCaseStepBaseSerializer):
+    attachments = PrimaryKeyRelatedField(
+        many=True, queryset=AttachmentSelector().attachment_list(), required=False
+    )
+
+    class Meta(TestCaseStepBaseSerializer.Meta):
+        fields = TestCaseStepBaseSerializer.Meta.fields + ('attachments',)
+
+
+class TestCaseStepOutputSerializer(TestCaseStepBaseSerializer):
+    attachments = AttachmentSerializer(many=True, read_only=True)
+
+    class Meta(TestCaseStepBaseSerializer.Meta):
+        fields = TestCaseStepBaseSerializer.Meta.fields + ('attachments',)
 
 
 class TestCaseBaseSerializer(ModelSerializer):
     class Meta:
         model = TestCase
-        fields = ('id', 'name', 'project', 'suite', 'setup', 'scenario', 'teardown', 'estimate', 'description')
+        fields = ('id', 'name', 'project', 'suite', 'setup', 'scenario',
+                  'teardown', 'estimate', 'description', 'is_steps')
+
+
+class TestCaseInputBaseSerializer(TestCaseBaseSerializer):
+    attachments = PrimaryKeyRelatedField(
+        many=True, queryset=AttachmentSelector().attachment_list(), required=False
+    )
+
+    class Meta(TestCaseBaseSerializer.Meta):
+        fields = TestCaseBaseSerializer.Meta.fields + ('attachments',)
+
+
+class TestCaseInputSerializer(TestCaseInputBaseSerializer):
+    scenario = serializers.CharField(required=True)
+
+
+class TestCaseInputWithStepsSerializer(TestCaseInputBaseSerializer):
+    scenario = serializers.CharField(allow_blank=True, required=False)
+    steps = TestCaseStepInputSerializer(many=True, required=True)
+
+    class Meta(TestCaseInputBaseSerializer.Meta):
+        fields = TestCaseInputBaseSerializer.Meta.fields + ('steps',)
+
+    def validate_steps(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError('At least one step required')
+        return value
 
 
 class TestCaseSerializer(TestCaseBaseSerializer):
+    steps = SerializerMethodField()
     url = HyperlinkedIdentityField(view_name='api:v1:testcase-detail')
     key = IntegerField(source='id', read_only=True)
     value = IntegerField(source='id', read_only=True)
@@ -52,44 +105,92 @@ class TestCaseSerializer(TestCaseBaseSerializer):
     )
 
     class Meta(TestCaseBaseSerializer.Meta):
-        fields = TestCaseBaseSerializer.Meta.fields + ('key', 'value', 'attachments', 'url',)
+        fields = TestCaseBaseSerializer.Meta.fields + ('key', 'value', 'attachments', 'url', 'steps')
+
+    def get_steps(self, instance):
+        return TestCaseStepOutputSerializer(instance.steps.all(), many=True, context=self.context).data
+
+
+class TestCaseTreeSerializer(ModelSerializer):
+    class Meta:
+        model = TestCase
+        fields = ('id', 'name')
 
 
 class TestCaseRetrieveSerializer(ModelSerializer):
+    steps = SerializerMethodField()
     url = HyperlinkedIdentityField(view_name='api:v1:testcase-detail')
     attachments = AttachmentSerializer(many=True, read_only=True)
+    versions = SerializerMethodField()
+    current_version = SerializerMethodField()
+
+    def __init__(self, instance=None, version=None, data=empty, **kwargs):
+        self._version = version
+        super().__init__(instance, data, **kwargs)
 
     class Meta:
         model = TestCase
-        fields = ('id', 'name', 'project', 'attachments', 'suite', 'setup', 'scenario', 'teardown', 'estimate', 'url',
-                  'description')
+        fields = (
+            'id', 'name', 'project', 'attachments', 'suite', 'setup', 'scenario', 'teardown', 'estimate', 'url',
+            'versions', 'current_version', 'description', 'is_steps', 'steps'
+        )
+
+    def get_versions(self, instance):
+        return instance.history.values_list('history_id', flat=True).all()
+
+    def get_current_version(self, instance):
+        if self._version is not None:
+            return self._version
+        return instance.history.first().history_id
+
+    def get_steps(self, instance):
+        if self._version is not None:
+            steps = TestCaseStep.history.filter(test_case_history_id=self._version).as_instances()
+        else:
+            steps = instance.steps.all()
+        return TestCaseStepOutputSerializer(steps, many=True, context=self.context).data
 
 
-class TestSuiteTreeSerializer(ModelSerializer):
+class TestSuiteBaseSerializer(ModelSerializer):
+    url = HyperlinkedIdentityField(view_name='api:v1:testsuite-detail')
+
+    class Meta:
+        model = TestSuite
+        fields = ('id', 'name', 'parent', 'project', 'url', 'description')
+
+
+class TestSuiteSerializer(TestSuiteBaseSerializer):
+    test_cases = TestCaseSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = TestSuite
+        fields = TestSuiteBaseSerializer.Meta.fields + ('test_cases',)
+
+
+class TestSuiteTreeSerializer(TestSuiteBaseSerializer):
     children = SerializerMethodField()
     key = serializers.IntegerField(source='id')
     value = serializers.IntegerField(source='id')
     title = serializers.CharField(source='name')
     descendant_count = SerializerMethodField()
-    test_cases = TestCaseBaseSerializer(many=True, read_only=True)
+    cases_count = IntegerField()
 
     class Meta:
         model = TestSuite
-        fields = ('id', 'value', 'name', 'key', 'title', 'level', 'children',
-                  'descendant_count', 'test_cases', 'description',
-                  )
+        fields = TestSuiteBaseSerializer.Meta.fields + (
+            'children', 'key', 'value', 'title', 'descendant_count', 'cases_count'
+        )
 
     def get_descendant_count(self, instance):
         return instance.get_descendant_count()
 
     def get_children(self, value):
-        return self.__class__(value.child_test_suites.all(), many=True).data
+        return self.__class__(value.child_test_suites.all(), many=True, context=self.context).data
 
 
-class TestSuiteSerializer(ModelSerializer):
-    url = HyperlinkedIdentityField(view_name='api:v1:testsuite-detail')
-    test_cases = TestCaseSerializer(many=True, read_only=True)
+class TestSuiteTreeCasesSerializer(TestSuiteTreeSerializer):
+    test_cases = TestCaseTreeSerializer(many=True, read_only=True)
 
     class Meta:
         model = TestSuite
-        fields = ('id', 'name', 'parent', 'project', 'url', 'test_cases', 'description')
+        fields = TestSuiteTreeSerializer.Meta.fields + ('test_cases',)

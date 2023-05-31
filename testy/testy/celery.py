@@ -29,6 +29,7 @@
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
 from celery import Celery
+from celery.schedules import crontab
 
 # Set the default Django settings module for the 'celery' program.
 # os.environ.get('DJANGO_SETTINGS_MODULE', 'testy.settings.development')
@@ -43,3 +44,10 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
+
+app.conf.beat_schedule = {
+    'delete-expired-tokens-daily': {
+        'task': 'testy.tasks.delete_expired_tokens',
+        'schedule': crontab(hour=0, minute=0)
+    },
+}

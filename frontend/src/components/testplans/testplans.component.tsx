@@ -80,6 +80,7 @@ const TestplansComponent: React.FC = () => {
             if (testPlanId) {
                 TestPlanService.getTestPlan(testPlanId).then((response) => {
                     let curTestPlan: testPlan = response.data
+                    console.log(curTestPlan)
                     curTestPlan.tests.forEach(x => {
                         if (x.last_status) {
                             let status = statuses.find(i => i.name === x.last_status)
@@ -220,11 +221,12 @@ const TestplansComponent: React.FC = () => {
                         </Table>
                     </TableContainer>
                     {detailedTestInfo && detailedTestInfo.show &&
-                    <Grid>
-                        <DetailedTestInfoComponent detailedTestInfo={detailedTestInfo} setDetailedTestInfo={setDetailedTestInfo}
-                                                   showEnterResult={showEnterResult}
-                                                   setShowEnterResult={setShowEnterResult}/>
-                    </Grid>}
+                        <Grid>
+                            <DetailedTestInfoComponent detailedTestInfo={detailedTestInfo}
+                                                       setDetailedTestInfo={setDetailedTestInfo}
+                                                       showEnterResult={showEnterResult}
+                                                       setShowEnterResult={setShowEnterResult}/>
+                        </Grid>}
                 </SplitterLayout>
             </div>
             <div className={classes.rightGrid} style={{backgroundColor: theme.palette.rightDialogPart}}>

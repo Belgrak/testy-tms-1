@@ -68,7 +68,7 @@ services:
     build:
       context: testy
       dockerfile: scripts/prod/celery/Dockerfile
-    command: celery -A testy worker -l INFO
+    command: celery -A testy worker -B -l INFO
     environment:
       - DJANGO_SETTINGS_MODULE=testy.settings.production
       - POSTGRES_NAME=${POSTGRES_NAME}

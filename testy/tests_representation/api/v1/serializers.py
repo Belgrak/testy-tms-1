@@ -35,7 +35,7 @@ from rest_framework.relations import HyperlinkedIdentityField, PrimaryKeyRelated
 from rest_framework.serializers import CharField, IntegerField, ModelSerializer
 from tests_description.api.v1.serializers import TestCaseSerializer
 from tests_description.selectors.cases import TestCaseSelector
-from tests_representation.models import Parameter, Test, TestPlan, TestResult
+from tests_representation.models import Parameter, Test, TestPlan, TestResult, TestStepResult
 from tests_representation.selectors.parameters import ParameterSelector
 from tests_representation.selectors.results import TestResultSelector
 
@@ -55,6 +55,7 @@ class TestPlanUpdateSerializer(ModelSerializer):
         model = TestPlan
         fields = (
             'id', 'name', 'parent', 'test_cases', 'started_at', 'due_date', 'finished_at', 'is_archive', 'project',
+            'description'
         )
 
 
@@ -86,9 +87,27 @@ class TestSerializer(ModelSerializer):
         return instance.case.name
 
     def get_last_status(self, instance):
-        result = TestResultSelector().last_result_by_test_id(instance.id)
-        if result:
-            return result.get_status_display()
+        results = instance.results.all()
+        if results:
+            return results[len(results) - 1].get_status_display()
+
+
+class TestStepResultSerializer(ModelSerializer):
+    id = IntegerField(required=False)
+    name = SerializerMethodField()
+    sort_order = SerializerMethodField()
+
+    class Meta:
+        model = TestStepResult
+        fields = ('id', 'step', 'name', 'status', 'sort_order')
+
+    def get_name(self, instance):
+        step = instance.step.history.get(test_case_history_id=instance.test_result.test_case_version).instance
+        return step.name
+
+    def get_sort_order(self, instance):
+        step = instance.step.history.get(test_case_history_id=instance.test_result.test_case_version).instance
+        return step.sort_order
 
 
 class TestResultSerializer(ModelSerializer):
@@ -96,12 +115,15 @@ class TestResultSerializer(ModelSerializer):
     status_text = CharField(source='get_status_display', read_only=True)
     user_full_name = SerializerMethodField(read_only=True)
     attachments = AttachmentSerializer(many=True, read_only=True)
+    steps_results = TestStepResultSerializer(many=True, required=False)
 
     class Meta:
         model = TestResult
         fields = ('id', 'project', 'status', 'status_text', 'test', 'user', 'user_full_name', 'comment',
                   'is_archive', 'test_case_version', 'created_at', 'updated_at', 'url', 'execution_time', 'attachments',
-                  'attributes')
+                  'attributes',
+                  'steps_results',
+                  )
 
         read_only_fields = ('test_case_version', 'project', 'user', 'id')
 
@@ -114,26 +136,6 @@ class TestResultInputSerializer(TestResultSerializer):
     attachments = PrimaryKeyRelatedField(
         many=True, queryset=AttachmentSelector().attachment_list(), required=False
     )
-
-
-class TestPlanTreeSerializer(ModelSerializer):
-    children = SerializerMethodField()
-    title = SerializerMethodField()
-    key = IntegerField(source='id')
-    value = IntegerField(source='id')
-
-    class Meta:
-        model = TestPlan
-        fields = ('id', 'key', 'value', 'title', 'name', 'is_archive', 'level', 'children',)
-
-    def get_title(self, instance):
-        if instance.parameters is None:
-            return instance.name
-        parameters = ParameterSelector().parameter_name_list_by_ids(instance.parameters)
-        return '{0} [{1}]'.format(instance.name, ', '.join(parameters))
-
-    def get_children(self, value):
-        return self.__class__(value.get_children(), many=True).data
 
 
 class TestPlanTestResultSerializer(ModelSerializer):
@@ -179,12 +181,29 @@ class TestPlanOutputSerializer(ModelSerializer):
     class Meta:
         model = TestPlan
         fields = (
-            'id', 'name', 'parent', 'parameters', 'started_at', 'due_date', 'finished_at', 'is_archive',
-            'project', 'child_test_plans', 'url', 'title', 'description'
+            'id', 'name', 'parent',
+            'parameters',
+            'started_at', 'due_date', 'finished_at', 'is_archive',
+            'project',
+            'child_test_plans',
+            'url', 'title', 'description'
         )
 
-    def get_title(self, instance):
-        if instance.parameters is None:
-            return instance.name
-        parameters = ParameterSelector().parameter_name_list_by_ids(instance.parameters)
-        return '{0} [{1}]'.format(instance.name, ', '.join(parameters))
+    @staticmethod
+    def get_title(instance: TestPlan):
+        if parameters := instance.parameters.all():
+            return '{0} [{1}]'.format(instance.name, ', '.join([p.data for p in parameters]))
+        return instance.name
+
+
+class TestPlanTreeSerializer(TestPlanOutputSerializer):
+    children = SerializerMethodField()
+    key = IntegerField(source='id')
+    value = IntegerField(source='id')
+
+    class Meta:
+        model = TestPlan
+        fields = TestPlanOutputSerializer.Meta.fields + ('children', 'key', 'value')
+
+    def get_children(self, value):
+        return self.__class__(value.child_test_plans.all(), many=True, context=self.context).data

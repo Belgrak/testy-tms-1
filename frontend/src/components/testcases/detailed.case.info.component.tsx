@@ -79,6 +79,24 @@ const DetailedCaseInfo: React.FC<Props> = ({myCase, setDetailedCaseInfo}) => {
                 </Grid>
                 <Divider style={{margin: "10px 0px 10px 0px"}}/>
             </Grid>}
+            {myCase.steps && myCase.steps?.length !== 0 && <Grid>
+                <Typography variant="h6">
+                    {"Шаги:"}
+                </Typography>
+                <ol>
+                    {myCase.steps.map((step) => <li>
+                        <Grid>
+                            <Typography variant="h6">Название</Typography>
+                            {step.name}
+                        </Grid>
+                        <Grid style={{marginTop: "10px"}}>
+                            <Typography variant="h6">Описание</Typography>
+                            {step.scenario}
+                        </Grid>
+                        <Divider style={{margin: "10px 0px 10px 0px"}}/>
+                    </li>)}
+                </ol>
+            </Grid>}
             {myCase.estimate && <Grid>
                 <Typography variant="h6">
                     {t("cases.estimate")}

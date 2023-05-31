@@ -34,11 +34,11 @@ from http import HTTPStatus
 from typing import Any, Dict
 
 import pytest
-from django.forms import model_to_dict
+from users.api.v1.serializers import UserSerializer
 from users.models import User
 
 from tests import constants
-from tests.commons import RequestType
+from tests.commons import RequestType, model_to_dict_via_serializer
 from tests.error_messages import INVALID_EMAIL_MSG, REQUIRED_FIELD_MSG, UNAUTHORIZED_MSG
 
 
@@ -49,27 +49,24 @@ class TestUserEndpoints:
     view_name_me = 'api:v1:user-me'
 
     def test_list(self, api_client, authorized_superuser, user_factory):
-        expected_instances = [self._form_dict_user_model(authorized_superuser)]
+        expected_instances = [model_to_dict_via_serializer([authorized_superuser], UserSerializer)]
         for _ in range(constants.NUMBER_OF_OBJECTS_TO_CREATE):
-            expected_instances.append(self._form_dict_user_model(user_factory()))
+            expected_instances.append(model_to_dict_via_serializer([user_factory()], UserSerializer))
         response = api_client.send_request(self.view_name_list)
 
         for instance_dict in json.loads(response.content):
-            instance_dict.pop('url')
             assert instance_dict in expected_instances, f'{instance_dict} was not found in expected instances.'
 
     def test_retrieve(self, api_client, authorized_superuser, user):
-        expected_dict = self._form_dict_user_model(user)
+        expected_dict = model_to_dict_via_serializer([user], UserSerializer)
         response = api_client.send_request(self.view_name_detail, reverse_kwargs={'pk': user.pk})
         actual_dict = json.loads(response.content)
-        actual_dict.pop('url')
         assert actual_dict == expected_dict, 'Actual model dict is different from expected'
 
     def test_me(self, api_client, authorized_superuser):
-        expected_dict = self._form_dict_user_model(authorized_superuser)
+        expected_dict = model_to_dict_via_serializer([authorized_superuser], UserSerializer)
         response = api_client.send_request(self.view_name_me)
         actual_dict = json.loads(response.content)
-        actual_dict.pop('url')
         assert actual_dict == expected_dict, 'Actual model dict is different from expected'
 
     def test_creation(self, api_client, authorized_superuser):
@@ -175,7 +172,7 @@ class TestUserEndpoints:
 
     @staticmethod
     def _form_dict_user_model(user: User) -> Dict[str, Any]:
-        user_dict = model_to_dict(user)
+        user_dict = model_to_dict_via_serializer([user], User)
         fields_to_remove = ['is_superuser', 'last_login', 'password', 'user_permissions']
         for field in fields_to_remove:
             user_dict.pop(field)

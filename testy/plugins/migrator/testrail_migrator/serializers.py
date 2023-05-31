@@ -28,58 +28,17 @@
 # if any, to sign a "copyright disclaimer" for the program, if necessary.
 # For more information on this, and how to apply and follow the GNU AGPL, see
 # <http://www.gnu.org/licenses/>.
-from core.models import Project
-from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
-from rest_framework.relations import HyperlinkedIdentityField, PrimaryKeyRelatedField
+from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.serializers import ModelSerializer
 from tests_representation.models import Parameter, Test
 from tests_representation.selectors.results import TestResultSelector
-
-from .models import TestrailBackup, TestrailSettings
 
 
 class ParameterSerializer(ModelSerializer):
     class Meta:
         model = Parameter
         fields = ('id', 'project', 'data', 'group_name')
-
-
-class TestrailSettingsInputSerializer(ModelSerializer):
-    class Meta:
-        model = TestrailSettings
-        fields = ('login', 'password', 'api_url', 'testy_attachments_url')
-
-
-class TestrailSettingsOutputSerializer(ModelSerializer):
-    class Meta:
-        model = TestrailSettings
-        fields = ('login', 'api_url', 'testy_attachments_url')
-
-
-class TestrailUploadSerializer(serializers.Serializer):
-    testrail_backup = PrimaryKeyRelatedField(queryset=TestrailBackup.objects.all())
-    testrail_settings = PrimaryKeyRelatedField(queryset=TestrailSettings.objects.all())
-    upload_root_runs = serializers.BooleanField(default=False)
-
-
-class TestyDeleteProjectSerializer(serializers.Serializer):
-    testy_project = PrimaryKeyRelatedField(queryset=Project.objects.all())
-    wipe_users = serializers.BooleanField(default=False)
-
-
-class DownloadSerializer(serializers.Serializer):
-    project_id = serializers.IntegerField()
-    download_attachments = serializers.BooleanField(default=True)
-    ignore_completed = serializers.BooleanField(default=True)
-    testrail_settings = PrimaryKeyRelatedField(queryset=TestrailSettings.objects.all())
-    backup_filename = serializers.CharField(default='testrail_backup')
-
-
-class TestrailBackupSerializer(ModelSerializer):
-    class Meta:
-        model = TestrailBackup
-        fields = ('name', 'filepath')
 
 
 class TestSerializer(ModelSerializer):

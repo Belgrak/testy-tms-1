@@ -32,12 +32,7 @@
 from django.urls import path
 from rest_framework.routers import SimpleRouter
 from tests_representation.api.v1 import views
-from tests_representation.api.v1.views import (
-    TestPLanDetailView,
-    TestPLanListView,
-    TestPLanStatisticsView,
-    TestResultChoicesView,
-)
+from tests_representation.api.v1.views import TestPLanStatisticsView, TestResultChoicesView
 
 router = SimpleRouter()
 router.register('parameters', views.ParameterViewSet)
@@ -49,14 +44,21 @@ test_detail = views.TestDetailViewSet.as_view({
     'put': 'update',
     'patch': 'partial_update',
 })
-
+testplan_list = views.TestPlanViewSet.as_view({'get': 'list', 'post': 'create'})
+testplan_detail = views.TestPlanViewSet.as_view({
+    'get': 'retrieve',
+    'delete': 'destroy',
+    'patch': 'partial_update',
+})
+breadcrumbs_plans_view = views.TestPlanViewSet.as_view({'get': 'breadcrumbs_view'})
 urlpatterns = [
     path('tests/', test_lists, name='test-list'),
     path('tests/<int:pk>/', test_detail, name='test-detail'),
 
-    path('testplans/', TestPLanListView.as_view({'get': 'list', 'post': 'create'}), name='testplan-list'),
-    path('testplans/<int:pk>/', TestPLanDetailView.as_view(), name='testplan-detail'),
+    path('testplans/', testplan_list, name='testplan-list'),
+    path('testplans/<int:pk>/', testplan_detail, name='testplan-detail'),
     path('testplans/<int:pk>/statistics/', TestPLanStatisticsView.as_view(), name='testplan-statistics'),
+    path('testplans/<int:pk>/parents/', breadcrumbs_plans_view, name='testplan-breadcrumbs'),
 
     path('test-results/', TestResultChoicesView.as_view(), name='test-results'),
 ]
